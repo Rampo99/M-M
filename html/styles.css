@@ -1,0 +1,609 @@
+html,body, #divReturn, #disposition {
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a[class="widgetEstorie"] {
+  background-color:  #c7ffd8;
+  text-align: center;
+  border: 1px solid gray;
+}
+
+button[class="widgetEstorie"], .activatedButton{
+  background-color: #28FF93;
+}
+
+.widgetEstorie button {
+  width:80%;
+  font-size: 12px;
+}
+
+#disposition{
+  display: grid;
+  grid-template-areas: "bottoni editing widgetPresenti";
+  grid-template-columns: 14% 66% 20%;
+}
+
+#v-pills-tab {
+  background-color: #D5D5F6;
+}
+
+#sidebar{
+  grid-area: bottoni;
+}
+
+#editing{
+  grid-area: editing;
+  height: 100%;
+}
+
+#divModificaWidget, #navigatoreWidget{
+  grid-area: widgetPresenti;
+  background-color: #D5FFEA;
+  padding: 1%;
+}
+
+
+#editing h2 {
+  margin-top: 8px;
+  text-align: center;
+}
+
+#divSchermataEditing {
+  display: grid;
+  grid-template-areas: "testo "
+                       "link"
+                       "media"
+                       "quiz";
+  grid-template-rows: 15% 20% 32% 33%;
+  grid-template-columns: 100%;
+  margin:1% 3%;
+  border:1px solid black;
+  justify-content: center;
+  min-height: 85vh;
+}
+
+#divSchermataPlaying{
+  min-height: 85vh;
+  border-radius: 10%;
+  background-color: #D4D5FF;
+  border: 2px solid black;
+  padding:20px;
+}
+
+#playing {
+  margin: 0px 10px;
+}
+
+#divSchermataPlaying #textDiv {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#divSchermataStorie {
+  height:100vh;
+  padding:10px;
+}
+
+#divSchermataStorie div:nth-of-type(odd):not(#divElencoStorie):not([id^="divRiepilogo"]){
+  margin:10px 0px;
+  background-color: #90FFE5;
+  padding: 5px;
+}
+
+#divSchermataStorie div:nth-of-type(even):not(#divElencoStorie):not([id^="divRiepilogo"]){
+  margin:5px 0px;
+  background-color: #9EDCFC;
+  padding: 5px;
+}
+
+[id^="divRiepilogo"] {
+  border: 2px solid black;
+  margin: 10px 10px 10px 0px;
+  padding: 5px;
+  background-color: #D7FFE1;
+}
+
+[id^="accStoria"], [id^="fasciaStoria"]{
+float: right;
+margin-right: 5px;
+}
+
+[id^="spanSchermataRiepilogo"]{
+  display: inline-block;
+  margin: 10px 20px;
+}
+
+
+
+#divSchermataStorie button:not([id^="bottoneSalvaRiepilogo"]) {
+  margin-top: 5px;
+  margin-right: 10px;
+}
+
+[id^="bottoneSalvaRiepilogo"]{
+margin-top: 15px;
+}
+
+span[id^="titoloStoria"] {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#checkboxDiv {
+  line-height: 1.3;
+}
+
+img {
+  width: 227px;
+  margin: 2px;
+  height: auto;
+}
+
+#divSchermataEditing * {
+  margin: 1px;
+}
+
+#divIndiziERisposte {
+  margin-top: 2%;
+}
+
+#nomeEaccessibilita, #divIndiziERisposte, #salvataggioSchermata{
+  margin-left:3%;
+  margin-right:3%;
+  background-color: #90FFE5;
+  padding: 10px;
+}
+
+#salvataggioSchermata {
+  margin-top:0;
+}
+
+label[for="accessibilita"] {
+  float:right;
+}
+
+#salvaWidget, #salvataggioSchermata button {
+  margin:0;
+  float:right;
+}
+
+#textDiv {
+  grid-area: testo;
+  text-align: center;
+  margin-top: 15px;
+}
+
+#aDiv {
+  grid-area:link;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#imgDiv{
+  grid-area:media;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#coloreDiv, #dataDiv, #dateDiv, #timeDiv, #colorDiv, #numberDiv, #rispostaTestoDiv, #cronoDiv  {
+  grid-area: quiz;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#checkboxDiv, #radioDiv {
+  grid-area:quiz;
+  margin:15px 10%;
+}
+
+#divContieniBottoni {
+  background-color: #C9FFD6;
+}
+
+#divContieniBottoni button{
+  font-weight: 400;
+  margin: 3px 5px;
+  width: 110px;
+  margin-right: 10px;
+}
+
+#divContieniBottoni p {
+  margin-left: 5px;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+#inputReset {
+  background-color: red;
+}
+
+label[for="punteggioRispostaEsatta"], label[for="punteggioRispostaSbagliata"]{
+  width:230px;
+}
+
+
+#divModificaWidget p, #navigatoreWidget p {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+#divModificaWidget span, #navigatoreWidget span {
+  display: inline-block;
+  width:55%;
+}
+
+[id^='bottoneModifica'], #navigatoreWidget button {
+  margin-bottom: 1%;
+}
+
+#divModificaWidget div {
+  background-color: #28FF93;
+  padding:2%;
+  border: 2px solid black;
+  margin: 2%;
+}
+[id^='annulla'] {
+  float: right;
+}
+
+[id^='annulla'], [id^='salva'] {
+  margin-top: 2%;
+}
+
+[id^="testoText"] {
+  width:100%;
+  height:100px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#divRiepilogoStorie{
+  margin-left: 100%;
+  width: 100%;
+}
+
+
+#feedbackWidget, #feedbackSchermata{
+justify-content: center;
+display: inline-block;
+width: 150px;
+  border:1px solid black;
+  background-color: orange;
+  padding: 0;
+}
+
+
+#loading_screen {
+  display: block;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  color: #FFF;
+  text-align: center;
+  padding: 80px;
+  background-color: #000;
+  backgground-color: rgba(0, 0, 0, .5);
+  box-sizing: border-box;
+}
+
+#divChat{
+  float: right;
+  width: 238px;
+}
+
+.mare {
+  background-image: url("images/mare.jpg");
+  color:black;
+  background-size: 100% 100%;
+  font-weight: 600;
+}
+
+
+.vulcano {
+  background-image: url("images/vulcano.jpg");
+  color:black;
+  background-size: 100% 100%;
+  font-weight: 600;
+}
+
+.giungla  {
+  background-image: url("images/giungla.jpg");
+  color:black;
+  font-weight: 600;
+  background-size: 100% 100%;
+}
+
+.iconaHint {
+  border: 1px black solid;
+  font-size: 30px
+}
+
+.tornaHome {
+  padding: 10px;
+  background-color: red;
+  color:white;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.tornaHome:hover {
+  padding: 10px;
+  background-color: red;
+  text-decoration: underline;
+  color:white;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.divTornaHome {
+  margin-top: 200px;
+}
+
+/* NavBar */
+.navbar,.dropdown-item,.dropdown-menu {
+  background-color: #161d6f !important;
+}
+
+.navbar-brand,.nav-link, .navbar-toggler-icon,.dropdown-item {
+  color:#f6f6f6 !important;
+}
+
+.navbar-brand:hover,.nav-link:hover, .navbar-toggler-icon:hover,.dropdown-item:hover{
+  color:#98ded9 !important;
+}
+/* Home */
+
+.divCose , .divChiSiamo , .divLoScopo  {
+  padding: 25px 0px;
+}
+
+.divCose h3, .divChiSiamo h3, .divLoScopo h3 {
+  margin-left: 30px;
+}
+
+.divCose p, .divChiSiamo p, .divLoScopo p {
+  margin-left: 30px;
+  margin-bottom: 0px;
+}
+
+.divChiSiamo {
+  background-color: #98ded9;
+  color: #161d6f;
+}
+
+.divLoScopo {
+  background-color: #98ded9;
+  color: #161d6f;
+}
+
+.divCose {
+  background-color:#161d6f;
+  color: #98ded9;
+}
+
+.row {
+  margin: 0px !important;
+}
+
+.collegamenti {
+  background-color: #98ded9;
+  padding: 10px 0px;
+}
+
+.collegamenti h2 {
+  padding: 0px 30px !important ;
+  color:#161d6f;
+}
+
+.playerCollegamenti, .editorCollegamenti, .authorCollegamenti {
+  text-align: center;
+  margin: 10px 0px;
+}
+
+.playerCollegamenti i, .editorCollegamenti i, .authorCollegamenti i {
+  color: #161d6f;
+  font-size: 120px;
+}
+
+.playerCollegamenti p, .editorCollegamenti p, .authorCollegamenti p {
+  color: #161d6f;
+  margin: 30px;
+}
+
+.anchorHome {
+  padding: 10px 20px;
+  background-color: #161d6f;
+  color: #c7ffd8;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.anchorHome:hover {
+  padding: 10px 20px;
+  background-color: #161d6f;
+  text-decoration: underline;
+  color: #c7ffd8;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.storiePubblicate {
+  background-color: #98ded9;
+  color: #161d6f;
+  padding: 10px 0px;
+}
+
+.storiePubblicate h2 {
+  padding: 0px 30px !important;
+}
+
+.storiePubblicate img {
+  width: 100px;
+  height: 100px;
+}
+
+.divPubblicata {
+  text-align: center;
+}
+/* Author */
+
+.spacing {
+  margin-left : 30px;
+}
+
+.numeroGruppo {
+  margin-left: 10px;
+}
+.labelTipoStoria,.selectTipoStoria {
+  margin-bottom: 15px;
+}
+.divPannello {
+  padding: 20px 0px;
+  background-color: #f6f6f6;
+  color: #161d6f;
+}
+
+.buttonAvviaStoria{
+  padding: 7px;
+  background-color: #161d6f;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.buttonAvviaStoria:hover {
+  padding: 7px;
+  background-color: #161d6f;
+  text-decoration: underline;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.buttonInviaMessaggio {
+  margin-left: 10px;
+  padding: 1px 7px;
+  background-color: #161d6f;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.buttonInviaMessaggio:hover {
+  margin-left: 10px;
+  padding: 1px 7px;
+  background-color: #161d6f;
+  text-decoration: underline;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.divIndizi {
+  margin-top: 15px ;
+  margin-bottom: 15px;
+}
+
+.limiteChat {
+  height: 150px;
+  overflow-y: scroll;
+  border: 1px #161d6f solid;
+  padding: 3px;
+  margin-bottom: 20px;
+}
+
+.divValutazione {
+  margin-top: 15px;
+}
+/* Player */
+
+.playerUpper {
+  background-color: #f6f6f6;
+  color: #161d6f;
+  padding: 10px 0px;
+}
+
+.contieniPunteggio, .contieniInputUmano, .contieniTempo {
+  padding: 5px 0px;
+}
+
+.divProsegui {
+  text-align:center;
+  margin:5px;
+}
+
+.divChat {
+  background-color: #f6f6f6;
+  color: #161d6f;
+  padding: 10px 0px;
+}
+
+.divChatNoPadding {
+  padding: 0px !important;
+}
+
+#hits {
+  padding:20px;
+}
+
+#hits i:hover {
+  cursor: pointer;
+}
+
+
+@media screen and (max-width: 600px) {
+  .limiteChatPlayer {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px #161d6f solid;
+    padding: 3px;
+    margin-left: 30px;
+    margin-top: 30px;
+  }
+
+  .immagineTelefono {
+    width:110px;
+    height: 110px;
+  }
+}
+
+.limiteChatPlayer {
+  height: 300px;
+  overflow-y: scroll;
+  border: 1px #161d6f solid;
+  padding: 3px;
+}
+
+
+.iconaHint {
+  border: 1px #161d6f solid;
+  padding: 3px;
+  font-size: 30px;
+  margin-left: 10px;
+}
+
+.limitaTesto {
+  white-space: pre-line;
+}
+
+.anchorFinale {
+  padding: 7px;
+  background-color: #161d6f;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.anchorFinale:hover {
+  padding: 7px;
+  background-color: #161d6f;
+  text-decoration: underline;
+  color: #f6f6f6;
+  border-radius: 10px 10px 10px 10px;
+}
+
+.immagineCliccata {
+  filter: grayscale(100%);
+}

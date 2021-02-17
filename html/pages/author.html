@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+  <div>
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">M&M</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarAuthor" aria-controls="navbarAuthor" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarAuthor">
+          <ul class="navbar-nav ml-auto" id="myTab" role="tablist">
+            <li class="nav-item ">
+              <a class="nav-link" id="player-tab" href="/" role="tab" aria-selected="false">Home</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Player
+              </a>
+              <div class="dropdown-menu player" aria-labelledby="navbarDropdown">
+              </div>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Editor
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="/editor/crea">Crea Widget</a>
+                <a class="dropdown-item" href="/editor/widget">I tuoi widget</a>
+                <a class="dropdown-item" href="/editor/storie">Le tue storie</a>
+              </div>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" id="author-tab" href="#" role="tab" aria-selected="true">Author<span class="sr-only">(current)</span></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <br />
+  <div id="divPannello" class="divPannello">
+    <h1 class="headingAuthor spacing">Gestione Partita</h1>
+    <div id="bigdiv">
+    </div>
+    <div id="divTipoStoria">
+      <label for="tipoStoria" class="labelTipoStoria spacing">Indicare se la storia è rivolta ad un singolo individuo, ad un piccolo gruppo o ad una classe: </label>
+      <select name="tipoStoria" class="selectTipoStoria spacing" id="tipoStoria" onChange="changef()">
+        <option value="individuale">Individuale</option>
+        <option value="gruppo">Piccolo gruppo (2-5 ragazzi)</option>
+        <option value="classe">Classe (15-25 ragazzi)</option>
+      </select>
+      <div id="divFormazioneGruppi"></div>
+    </div>
+    <button id="avviaStoria" class="buttonAvviaStoria spacing" onClick="avviaStoria()">Continua</button>
+  </div>
+
+
+  <script type="text/javascript">
+  var arrayPubblicate = []
+  $.ajax({
+    type: "get",
+    url: "/caricapubblicate",
+    success: function(response){
+        if(response == "error"){
+          console.log("Non hai storie pubblicate");
+        } else {
+          arrayPubblicate = response;
+          console.log(arrayPubblicate.length)
+          arrayPubblicate.map( (storiaPubblicata) => {
+            $(".player").append('<a class="dropdown-item" href="/player/?id='+storiaPubblicata.id+'">'+storiaPubblicata.titolo+'</a>')
+          })
+        }
+    }
+  });
+
+  let utenti = [];
+  let lungStoria = 0;
+  let timings = [];
+  let tipo= "";
+  window.addEventListener('beforeunload', function() {
+    disconnectPanel();
+  });
+  var socket = io(window.location.href);
+  var panelId = 0;
+  socket.on('connect', function(){
+    socket.emit('panelStart', panelId);
+  });
+  socket.on('getLunghezza', function(data){
+    lungStoria = data;
+  });
+  socket.on('message', function(data) {
+     console.log(data);
+     $("#divChat"+data.id).append('<p>'+ data.user + ": "+data.msg+'</p>');
+  });
+  socket.on("getStatus", function(data){
+    console.log(data);
+    console.log($("#divProgessi"+data.id).children().eq(data.schermata-1));
+    $("#valutazione"+data.id).remove();
+    $("#valuta"+data.id).val("");
+    $("#divProgessi"+data.id).children().eq(data.schermata-1).css("color","green");
+    $("<span>"+$("#Timer"+data.id).html()+" &nbsp;&nbsp;</span>").insertAfter("#divProgessi"+data.id+" br")
+    $("#Timer"+data.id).html(0);
+    $("#indizi"+data.id).empty();
+  });
+  function messaggio(gruppo){
+    let message = $("#chatinput"+gruppo).val();
+    socket.emit("msg",{user: "Admin", id: gruppo, msg: message});
+  }
+  function disconnectPanel () {  // utente si disconnette
+    socket.emit('panelDisconnected', panelId);
+  }
+  function assegnaNome(id){
+
+    let nome = $("#nome"+id).val();
+    console.log(nome);
+    socket.emit('assegnaNome',{id: id,nome: nome});
+    $("#"+id + " h3").html(nome);
+
+  }
+  socket.on('chiedivalutazione',function(data){
+    if(tipo == "individuale"){
+      $("#"+data.id).append("<div class='spacing divValutazione' id=valutazione"+data.id+" ><p>Input umano richiesto:"+data.msg+"</p><input type=text placeholder='Dai un punteggio numerico' id='valuta"+data.id+"'/><button class='spacing buttonInviaMessaggio' onClick=valuta("+data.id+")>Invia</button> </div>");
+    } else {
+      $("#"+data.id).append("<div class='spacing divValutazione' id=valutazione"+data.id+" ><p>Input umano richiesto:"+data.msg+"</p><input type=text placeholder='Dai un punteggio numerico' id='valuta"+data.id+"'/><button class='spacing buttonInviaMessaggio' onClick=valuta('"+data.id+"')>Invia</button> </div>");
+    }
+
+  });
+  function valuta(id){
+    let punteggio = $("#valuta"+id).val();
+    let valutazione = "NO";
+    if(punteggio > 0) valutazione = "OK";
+    console.log(valutazione + " "+ punteggio + " "+ id);
+    socket.emit("valuta",{valutazione: valutazione, punteggio: punteggio,id: id});
+    $("#valutazione"+id).remove();
+    $("#valuta"+id).val("");
+  }
+  socket.on('getUser',function(data){
+    utenti = data.ids;
+  });
+  socket.on('sendPunteggio',function(data){
+    $("#"+data.utente).empty();
+    if(data.nome == ""){
+      $("#"+data.utente).append("<h3 class=spacing >"+data.utente+"<h3><p class=spacing >Punteggio finale:"+data.punteggio+"</p>");
+    } else {
+      $("#"+data.utente).append("<h3 class=spacing >"+data.nome+"<h3><p class=spacing >Punteggio finale:"+data.punteggio+"</p>");
+    }
+
+  })
+  socket.on('help',function(data){
+    $("#indizi"+data.id).empty();
+    $("#indizi"+data.id).append("<p>É stato richiesto aiuto!</p>");
+
+    if(data.indizi.length){
+      let checker;
+      for(let i = 0; i < 3;i++){
+        checker = true;
+        for(let j = 0; j < data.indizi.length; j++){
+          if(i == data.indizi[j]){
+            checker = false
+          }
+        }
+        if(checker) {
+          if(tipo == "individuale"){
+            $("#indizi"+data.id).append("<button class=buttonInviaMessaggio onClick=aiuta("+data.id+","+i+")>Indizio"+parseInt(i+1)+"</button>");
+          } else {
+            $("#indizi"+data.id).append("<button class=buttonInviaMessaggio onClick=aiuta('"+data.id+"',"+i+")>Indizio"+parseInt(i+1)+"</button>");
+          }
+        }
+      }
+    } else {
+      for(let i = 0; i < 3;i++){
+        if(tipo == "individuale"){
+          $("#indizi"+data.id).append("<button class=buttonInviaMessaggio onClick=aiuta("+data.id+","+i+")>Indizio"+parseInt(i+1)+"</button>");
+        } else {
+          $("#indizi"+data.id).append("<button class=buttonInviaMessaggio onClick=aiuta('"+data.id+"',"+i+")>Indizio"+parseInt(i+1)+"</button>");
+        }
+      }
+    }
+
+
+  });
+  function aiuta(id,indizio){
+    console.log(id +" "+ indizio)
+    $("#indizi"+id).empty()
+    socket.emit("aiuta",{indizio:indizio,id: id});
+  }
+  function timer(){
+    $(".timer").each(function(){
+      let current = $(this).html();
+      let newval = parseInt(current) + 1
+      if(parseInt(current) > 120) $(this).parent().parent().children().eq(0).css('color','red');
+      $(this).html( newval);
+    });
+  }
+
+  function changef(){
+    tipo = $("#tipoStoria").val();
+    if(tipo == "gruppo"){
+      $("#divFormazioneGruppi").append('<label for="quantiInd" class="labelNumeroGruppo spacing" >Da quante persone deve essere formato il gruppo? </label><input id="quantiInd" class=numeroGruppo name="quantiInd" type="number" min="2" max="5" />')
+    } else {
+      if($("#quantiInd").length){
+        $('label[for=quantiInd]').remove();
+        $("#quantiInd").remove();
+      }
+
+    }
+  }
+  let v = 0;
+  let numero = 0;
+    function avviaStoria(){
+      tipo = $("#tipoStoria").val();
+      if(tipo == "gruppo"){
+        numero = $("#quantiInd").val();
+      }
+      let payload = {
+        type: tipo,
+        n: numero
+      }
+      $.ajax({
+        type: "post",
+        data: payload,
+        url: "/iniziaStoria",
+        success: function(res){
+          if(tipo == "gruppo"){
+            if(res == "Error"){
+
+            } else {
+              for(let i = res; i > 0; i--){
+                socket.emit("getPanelRooms",i);
+                $("#bigdiv").append('<div id="stanza'+i+'"><h3 class="spacing">Stanza'+i+'</h3><div class="spacing limiteChat" id="divChatstanza'+i+'"></div><label for="chatinputstanza'+i+'" class="spacing" >Scrivi ai giocatori:</label><input type="text" id="chatinputstanza'+i+'" class="spacing" placeholder="Scrivi un messaggio...">'+
+                                    '<button class="buttonInviaMessaggio" onClick=messaggio("'+"stanza"+i+'")>Invia!</button><div id="divProgessistanza'+i+'" class="spacing" ></div><div class="spacing divIndizi" id="indizistanza'+i+'"></div><label for="nomestanza'+i+'" class="spacing" >Assegna un nome:</label><input type="text" class="spacing" id="nomestanza'+i+'"/>'+
+                                    '<button class="buttonInviaMessaggio" onClick=assegnaNome("stanza'+i+'")>Assegna</button></div><hr />');
+                for(let j = 0; j < lungStoria; j++){
+                  $("#divProgessistanza"+i).append('<span style="color: red;" >■ &nbsp;&nbsp;</span>');
+                }
+                  $("#divProgessistanza"+i).append('<br />');
+                  $("#divProgessistanza"+i).append('<span class="timer" id=Timerstanza'+i+'>0</span>');
+              }
+            }
+
+          }
+          if(tipo == "classe") {
+            if(res == "Error"){
+
+            } else {
+              socket.emit("getPanelClasse","stanza");
+              $("#bigdiv").append('<div id="stanza"><h3 class="spacing" >Stanza</h3><div class="spacing limiteChat" id="divChatstanza"></div><label for="chatinputstanza" class="spacing" >Scrivi ai giocatori:</label><input type="text" id="chatinputstanza" class="spacing" placeholder="Scrivi un messaggio...">'+
+                                  '<button class="buttonInviaMessaggio" onClick=messaggio("stanza")>Invia!</button><div id="divProgessistanza" class="spacing" ></div><div class="spacing divIndizi" id="indizistanza"></div>'+
+                                  '<label for="nomestanza" class="spacing">Assegna un nome:</label><input class="spacing" type="text" id="nomestanza"/><button class="buttonInviaMessaggio" onClick=assegnaNome("stanza")>Assegna</button></div><hr />');
+              for(let j = 0; j < lungStoria; j++){
+                $("#divProgessistanza").append('<span style="color: red;">■ &nbsp;&nbsp;</span>');
+              }
+              $("#divProgessistanza").append('<br />');
+              $("#divProgessistanza").append('<span class="timer" id=Timerstanza>0</span>');
+
+            }
+
+          }
+          if(tipo == "individuale"){
+            console.log(utenti);
+            for(let i = utenti.length-1; i >= 0; i--){
+              socket.emit("getPanelUsers",utenti[i]);
+              $("#bigdiv").append('<div id="'+utenti[i]+'"><h3 class="spacing" >'+utenti[i]+'</h3><div id="divChat'+utenti[i]+'"class="spacing limiteChat" > </div><label for=id="chatinput'+utenti[i]+'" class="spacing" >Scrivi ai giocatori:</label><input type="text" id="chatinput'+utenti[i]+'" class="spacing" placeholder="Scrivi un messaggio...">'+
+                                  '<button class="buttonInviaMessaggio" onClick=messaggio('+utenti[i]+')>Invia!</button><div id="divProgessi'+utenti[i]+'" class="spacing" ></div><div id="indizi'+utenti[i]+'" class="spacing divIndizi" ></div><label for="nome'+utenti[i]+'" class="spacing">Assegna un nome:</label><input type="text" id="nome'+utenti[i]+'" class="spacing" />'+
+                                  '<button class="buttonInviaMessaggio" onClick=assegnaNome('+utenti[i]+')>Assegna</button></div><hr />');
+              for(let j = 0; j < lungStoria; j++){
+                $("#divProgessi"+utenti[i]).append('<span style="color: red;">■ &nbsp;&nbsp;</span>');
+              }
+                $("#divProgessi"+utenti[i]).append('<br />');
+                $("#divProgessi"+utenti[i]).append('<span class="timer" id=Timer'+utenti[i]+'>0</span>');
+            }
+          }
+          $("#divTipoStoria").remove();
+          $("#avviaStoria").remove();
+          v = setInterval(timer,1000)
+        }
+
+      });
+    }
+
+
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+  </body>
+
+  </html>

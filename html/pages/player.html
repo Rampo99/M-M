@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+</head>
+
+<body>
+  <div id="loading_screen">
+    <div>
+      <h1>Caricamento storia in corso...</h1>
+      <p>La tua storia è in caricamento<br>Resta connesso e aspetta che venga avviata!</p>
+      <img src="https://media4.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" alt="caricamento pagina" width="200px" height="150px" />
+    </div>
+    <div class="divTornaHome">
+      <a class="tornaHome" href="/" aria-label="Torna alla homepage">Torna alla home</a>
+    </div>
+  </div>
+  <div id="play" hidden>
+    <div>
+      <div class="playerUpper">
+        <div id="contieniPunteggio" class="spacing contieniPunteggio">
+          <span id="testoPunteggio">Punteggio: 0</span>
+        </div>
+        <div id="tempo" class="spacing contieniTempo">
+          <span>Secondi trascorsi: </span>
+          <span id="timer">0</span>
+          <span id="mostraAccessibile"></span>
+        </div>
+        <div id="inputUmano" class="spacing contieniInputUmano" hidden>
+          <input type="text" id="richiediInputUmano" placeholder="Chiedi una valutazione" /><button id="buttonRichiediInput" class="buttonInviaMessaggio spacing "onClick="chiedivalutazione()">Richiedi input umano</button>
+        </div>
+      </div>
+      <br aria-hidden="true" />
+      <form>
+        <div id="playing">
+          <div id="divSchermataPlaying" class="divSchermataPlaying">
+            <div id='textDiv'></div>
+            <div id='aDiv'></div>
+            <div id='imgDiv'></div>
+            <div id='radioDiv'></div>
+            <div id='checkboxDiv'></div>
+
+            <div id='numberDiv'></div>
+            <div id='dataDiv'></div>
+            <div id='coloreDiv'></div>
+            <div id="cronoDiv"></div>
+            <div id='rispostaTestoDiv'></div>
+          </div>
+        </div>
+      </form>
+      <div id="divProsegui" class="divProsegui">
+        <button id="test" class="buttonInviaMessaggio " onclick="prosegui()">prosegui</button>
+      </div>
+      <br />
+      <div class="divChat row">
+        <div class="col-md-8 divChatNoPadding">
+        <h3 class="spacing">Chat</h3>
+        <input type="text" id="chatinput" class="spacing" placeholder="Scrivi un messaggio..."><button id="inviaMessaggio" class="spacing buttonInviaMessaggio" onClick="messaggio();">Invia!</button>
+        <div id="hits" hidden>
+          <i class="fas fa-question iconaHint" title="indizi1" onClick="helpme(this.id)" id="question1"></i>
+          <i class="fas fa-question iconaHint" title="indizi2" onClick="helpme(this.id)" id="question2"></i>
+          <i class="fas fa-question iconaHint" title="indizi3" onClick="helpme(this.id)" id="question3"></i>
+        </div>
+        </div>
+        <div id="divChat" class="col-md-4 limiteChatPlayer"></div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+  var timer;
+  let storia = {};
+  let nome = "";
+  let arrayCaricaStorie = [];
+  let tipoStoria = "";
+  $.ajax({
+    type: "get",
+    url: "/caricastorie",
+    success: function(response){
+      if(response == "error"){
+        console.log("non ci sono storie")
+      } else {
+        arrayCaricaStorie = JSON.parse(response)
+        console.log(arrayCaricaStorie)
+      }
+      mostraSchermata();
+    }
+  });
+
+
+  let index = 0
+  let rispostaCorretta = ""
+  let queryString = window.location.search
+  let urlParams = new URLSearchParams(queryString)
+  let indice = urlParams.get('id')   //indice è il valore preso dall'url
+  $.ajax({
+    type: "post",
+    data: {nome: indice},
+    url: "/customcss",
+    success: function(response){
+      if(response == "OK"){
+        $('<link>')
+        .appendTo('head')
+        .attr({
+            type: 'text/css',
+            rel: 'stylesheet',
+            href: '/'+indice+'.css'
+        });
+      }
+    }
+  });
+
+  let crono = false;
+  function mostraSchermata() {
+    let schermata = arrayCaricaStorie[indice].elementi[index];
+    setCssDefault(schermata.stile)
+    if(schermata.hasOwnProperty('indizi')){
+      console.log("in");
+      $("#hits").removeAttr('hidden');
+      $("#inputUmano").removeAttr("hidden");
+    }
+
+    console.log()
+    for(let i in schermata){
+      //key = i
+      //per ogni elemento in elementi in faccio uno switch sulla key e in base al valore ritorno un risultato
+      switch (i) {
+        case "textDiv":
+        rispostaCorretta = ""
+        $("#textDiv").append('<p aria-describedby="'+schermata[i]+'" >'+schermata[i]+'</p>')
+        break;
+        case "aDiv":
+        rispostaCorretta = ""
+        for(let j=0 ; j < schermata[i].length; j=j+2) {
+          $("#aDiv").append('<a href='+schermata[i][j+0]+' target=blank >'+schermata[i][j+1]+' </a><br/>')
+        }
+        break;
+        case "radioDiv":
+        let nameRadio = schermata[i][0].replace(/ /g, "")
+        //per ogni radio torniamo 4 valori quindi incremento di 4 dopo aver inserito un radio
+        for( let j=0; j < schermata[i].length ; j=j+4) {
+          let valueRadio = schermata[i][j+2].replace(/ /g, "")
+          $("#radioDiv").append('<input id="radioPlayer'+j+'" type=radio name='+nameRadio+' value='+valueRadio+' /><label for="radioPlayer'+j+'" >'+schermata[i][j+2]+'</label><br />')
+          if(schermata[i][j+1] == "true") {
+            rispostaCorretta=""+nameRadio+"="+valueRadio+""
+          }
+          console.log(j)
+        }
+        break;
+        case "checkboxDiv":
+        rispostaCorretta= " "
+        let nameCheckbox = schermata[i][0].replace(/ /g, "")
+        //stesso discorso dei radio
+        for( let j=0; j < schermata[i].length ; j=j+4) {
+          let valueCheckbox = schermata[i][j+2].replace(/ /g, "")
+          $("#checkboxDiv").append('<input id="checkboxPlayer'+j+'" type=checkbox name='+nameCheckbox+' value='+valueCheckbox+' /><label for ="checkboxPlayer'+j+'" >'+schermata[i][j+2]+'</label><br />')
+          if(schermata[i][j+1] == "true") {
+            rispostaCorretta += "&"+nameCheckbox+"="+valueCheckbox+""
+
+          }
+        }
+        //rimuove il primo &
+        rispostaCorretta = rispostaCorretta.slice(2)
+        break;
+        case "imgDiv":
+        for (let j = 0; j < schermata[i].length; j=j+2) {
+        $("#imgDiv").append('<img id="immaginePlayer'+j+'" src='+schermata[i][j+1]+' alt="'+schermata[i][j+0]+'" class="immagineTelefono"></img>')
+        }
+        break;
+        case "numberDiv":
+        let nameNumber = schermata[i][0].replace(/ /g, "")
+        $("#numberDiv").append('<label for="numberPlayer" >'+schermata[i][0]+'</label><input id="numberPlayer" name='+nameNumber+' type=number value=0>')
+        rispostaCorretta=""+nameNumber+"="+schermata[i][1]+""
+        break;
+        case "dataDiv":
+        if(schermata[i][2]=="data"){
+          let nameData = schermata[i][0].replace(/ /g, "")
+          $("#dataDiv").append('<label for="dataPlayer">'+schermata[i][0]+'</label><input id="dataPlayer" type=date name='+nameData+' alt='+nameData+' value=2021-01-01 />')
+          rispostaCorretta =""+nameData+"="+schermata[i][1]+""
+        } else {
+          let nameOra = schermata[i][0].replace(/ /g, "")
+          $("#dataDiv").append('<label for="oraPlayer">'+schermata[i][0]+'</label><input id="oraPlayer" type=time name='+nameOra+' alt='+nameOra+' value=00:00 />')
+          rispostaCorretta =""+nameOra+"="+schermata[i][1]+""
+        }
+        break;
+        case "coloreDiv":
+        let nameColore = schermata[i][0].replace(/ /g, "")
+        $("#coloreDiv").append('<label for="colorePlayer">'+schermata[i][0]+'</label><input id="colorePlayer" type=color name='+nameColore+' alt='+nameColore+' value=#ffffff />')
+        rispostaCorretta =""+nameColore+"="+schermata[i][1]+""
+        break;
+        case "rispostaTestoDiv":
+        let nameRispostaTesto = schermata[i][0].replace(/ /g, "")
+        $("#rispostaTestoDiv").append('<label for="testoPlayer" >'+schermata[i][0]+'</label><input id="testoPlayer" type=text name='+nameRispostaTesto+' alt='+nameRispostaTesto+' value="" />')
+        rispostaCorretta =""+nameRispostaTesto+"="+schermata[i][1]+""
+        break;
+        case "cronoDiv":
+        let nameCrono = schermata[i][0].replace(/ /g, "")
+        $("#cronoDiv").append('<label for="cronologiaPlayer" >'+schermata[i][0]+'</label><input id="cronologiaPlayer" type=text name='+nameCrono+' alt='+nameCrono+' value="" />')
+        rispostaCorretta = schermata[i][1]+""
+        crono=true
+        let indexx = 1
+        $("#imgDiv").children().each(function(){
+          $(this).attr('onClick', "cronof("+indexx+",this.id);");
+          indexx++
+        })
+        break;
+        default:
+        break;
+      }
+    }
+
+    index++
+
+  }
+  let strrisp = ""
+  function cronof(n,id){
+    console.log(id);
+    $("#"+id).removeAttr("onClick");
+    if (strrisp == "") {
+      strrisp += n
+    }
+    else {
+      strrisp += ","+n
+    }
+    $("#cronologiaPlayer").val(strrisp)
+    let imgCliccata
+    switch (n) {
+      case 1:
+        imgCliccata=0
+      break;
+      case 2:
+        imgCliccata=2
+      break;
+      case 3:
+        imgCliccata=4
+      break;
+      case 4:
+        imgCliccata=6
+      break;
+      default:
+      break;
+    }
+    $("#immaginePlayer"+imgCliccata).addClass("immagineCliccata")
+  }
+  function prosegui() {
+    console.log(rispostaCorretta)
+    let rispostaUtente
+    if(crono){
+      rispostaUtente = strrisp;
+    } else {
+      let risposta = $("form").serialize();
+      rispostaUtente = decodeURIComponent(risposta)
+      for (let z=0; z < Array.from(Object.keys(arrayCaricaStorie[indice].elementi[index-1])).length ;z++) {
+      if( Array.from(Object.keys(arrayCaricaStorie[indice].elementi[index-1]))[z] == "rispostaTestoDiv") {
+        rispostaUtente = rispostaUtente.toLowerCase()
+        rispostaCorretta = rispostaCorretta.toLowerCase()
+      }
+    }
+      console.log(rispostaCorretta)
+      console.log(rispostaUtente)
+    }
+
+    if(rispostaUtente === rispostaCorretta) {
+      if(crono) crono = false;
+      if(tipoStoria == "individuale"){
+          $("#divSchermataPlaying").children().children().remove()
+          socket.emit('sendStatus',{id: userId, schermata: index});
+          aggiornaPunteggio(true)
+          $("#richiediInputUmano").val("");
+          $("#inputUmano").attr("hidden",true);
+          $("#hits").empty();
+          $("#hits").append('<i class="fas fa-question iconaHint" title="indizio1" onClick="helpme(this.id)" id="question1"></i>'+
+          '<i class="fas fa-question iconaHint" title="indizio2" onClick="helpme(this.id)" id="question2"></i>'+
+          '<i class="fas fa-question iconaHint" title="indizio3" onClick="helpme(this.id)" id="question3"></i>');
+          $("#hits").attr("hidden",true);
+          indiziricevuti = [];
+          if(index > arrayCaricaStorie[indice].elementi.length -1){
+            finestoria();
+            $("#test").remove();
+          } else {
+            mostraSchermata()
+          }
+
+          canclick = true;
+      } else {
+          socket.emit('rispostaCorretta', {id:stanzaId,value: "OK"});
+          socket.emit('sendStatus',{id: stanzaId, schermata: index});
+      }
+
+    } else {
+      if(crono) strrisp = ""
+      let indexx = 1
+      $("#imgDiv").children().each(function(){
+
+        $(this).attr('onClick', "cronof("+indexx+",this.id);");
+        indexx++
+      })
+      $("#cronologiaPlayer").val("")
+      $("[id^=immaginePlayer]").removeClass()
+      $("[id^=immaginePlayer]").addClass("immagineTelefono")
+      if(tipoStoria == "individuale"){
+        aggiornaPunteggio(false)
+        alert(arrayCaricaStorie[indice].elementi[index-1].error)
+      } else {
+          socket.emit('rispostaErrata', stanzaId);
+      }
+
+
+    }
+    //svuoto tutte le varie div
+  }
+
+  window.addEventListener('beforeunload', function (e) {
+    disconnectUser();
+  });
+  var socket = io(window.location.href);
+  socket.on('connect', connectUser);
+  socket.on('errorerisposta',function(data){
+    aggiornaPunteggio(false)
+    alert(arrayCaricaStorie[indice].elementi[index-1].error)
+  })
+  socket.on('prosegui', function (data) {
+    $("#richiediInputUmano").val("");
+    $("#inputUmano").attr("hidden",true);
+    $("#richiediInputUmano").val();
+     $("#divSchermataPlaying").children().children().remove()
+     if (data == "OK"){
+       aggiornaPunteggio(true)
+     } else {
+       punteggio = punteggio + data;
+       $("#testoPunteggio").text("Punteggio:"+punteggio)
+     }
+     $("#hits").empty();
+     $("#hits").append('<i class="fas fa-question iconaHint" title="indizio1" onClick="helpme(this.id)" id="question1"></i>'+
+     '<i class="fas fa-question iconaHint" title="indizio2" onClick="helpme(this.id)" id="question2"></i>'+
+     '<i class="fas fa-question iconaHint" title="indizio3" onClick="helpme(this.id)" id="question3"></i>');
+     $("#hits").attr("hidden",true);
+     indiziricevuti = [];
+     if(index > arrayCaricaStorie[indice].elementi.length -1) {
+       finestoria();
+       $("#test").remove();
+     } else {
+       mostraSchermata()
+     }
+
+     canclick = true;
+  })
+  socket.on('setNome',function(data){
+    nome = data.nome
+  })
+  socket.on('message', function (data) {
+     console.log(data)
+     $("#divChat").append('<p>'+data.user + ': '+data.msg+'</p>');
+  })
+  var userId = 0;
+  var stanzaId = 0;
+  function connectUser () {  // utente si connette
+    $.ajax({
+      type: "get",
+      url: "/getid",
+      success: function(res){
+        userId = parseInt(res);
+        socket.emit('userConnected', userId);
+        socket.emit('sendlunghezza',arrayCaricaStorie[indice].elementi.length);
+      }
+      });
+
+  }
+  var current = 0
+  function timer(){
+      $("#timer").html(current);
+      current = current +1
+  }
+  let indiziricevuti = [];
+  let canclick = true;
+  function helpme(id){
+    if(canclick){
+      $("#"+id).hide();
+      if(indiziricevuti.length < 3){
+        if(tipoStoria == "individuale"){
+          socket.emit("chiediaiuto",{id: userId,indizi: indiziricevuti});
+
+        } else {
+          socket.emit("chiediaiuto",{id:stanzaId,indizi: indiziricevuti});
+        }
+      } else {
+        alert("Hai giá ricevuto il numero massimo di indizi per questa schermata!");
+      }
+    } else {
+      alert("Hai giá richiesto un indizio, il valutatore deve decidere se mandartelo o meno! Attenti!");
+    }
+
+    canclick = false;
+  }
+  function finestoria(){
+    if(tipoStoria == "individuale") stanzaId = userId
+    console.log(punteggio + " " + current);
+    punteggio -= (current-1)/10
+
+    let payload = {
+      punteggio: punteggio,
+      stanza: stanzaId,
+      storia: indice,
+      nome: nome
+    }
+    console.log(payload);
+    $.ajax({
+      type: "post",
+      url: "/finestoria",
+      data: payload,
+      success: function(res){
+        $("#testoPunteggio").text("Punteggio Finale:"+punteggio)
+        console.log("ok")
+        $("#divProsegui").append("<a href=/ class=anchorFinale >Torna alla home</a>")
+         clearInterval(timer);
+      }
+      });
+  }
+
+  socket.on("riceviAiuto",(data)=>{
+    console.log(data);
+    alert(arrayCaricaStorie[indice].elementi[index-1].indizi[data]);
+    indiziricevuti.push(data);
+    canclick = true;
+  })
+  function messaggio() {
+    let msg = $("#chatinput").val();
+    console.log(msg);
+    if(tipoStoria == "individuale") {
+      if(nome == "") socket.emit("msg",{user: userId, id: userId, msg: msg})
+      else socket.emit("msg",{user: nome, id: userId, msg: msg})
+    } else {
+      socket.emit("msg",{user: userId, id: stanzaId, msg: msg})
+    }
+  }
+
+  socket.on("riceviValutazione", (data)=>{
+    console.log(data);
+    if(data.valutazione == "OK"){
+      if(tipoStoria == "individuale"){
+          $("#divSchermataPlaying").children().children().remove()
+          socket.emit('sendStatus',{id: userId, schermata: index});
+          punteggio = punteggio + parseInt(data.punteggio);
+          $("#richiediInputUmano").val("");
+          $("#inputUmano").attr("hidden",true);
+          $("#richiediInputUmano").val();
+          $("#hits").empty();
+          $("#hits").append('<i class="fas fa-question iconaHint" title="indizio1" onClick="helpme(this.id)" id="question1"></i>'+
+          '<i class="fas fa-question iconaHint" title="indizio2" onClick="helpme(this.id)" id="question2"></i>'+
+          '<i class="fas fa-question iconaHint" title="indizio3" onClick="helpme(this.id)" id="question3"></i>');
+          $("#hits").attr("hidden",true);
+          indiziricevuti = [];
+          if(index > arrayCaricaStorie[indice].elementi.length-1) {
+            finestoria();
+            $("#test").remove();
+          } else {
+            mostraSchermata()
+          }
+
+          canclick = true;
+          $("#testoPunteggio").text("Punteggio:"+punteggio)
+      } else {
+          socket.emit('rispostaCorretta', {id:stanzaId,value: parseInt(data.punteggio)});
+          socket.emit('sendStatus',{id: stanzaId, schermata: index});
+      }
+    } else {
+      punteggio = punteggio - data.punteggio;
+      alert("La tua risposta é stata valutata in modo errato, ritenta");
+      $("#testoPunteggio").text("Punteggio:"+punteggio)
+    }
+
+  });
+  function chiedivalutazione(){
+    //prendi inviaMessaggio
+    $("#inputUmano").removeAttr("hidden");
+    let msg = $("#richiediInputUmano").val()
+    if(tipoStoria == "individuale"){
+      socket.emit("chiedivalutazione",{id: userId, msg: msg});
+    } else {
+      socket.emit("chiedivalutazione",{id: stanzaId, msg: msg});
+    }
+
+  }
+  function disconnectUser () {  // utente si disconnette
+    console.log(userId);
+    console.log(stanzaId);
+    console.log(tipoStoria);
+    if(tipoStoria == "gruppo" || tipoStoria == "classe") socket.emit('userDisconnected', stanzaId);
+    else {
+      socket.emit('userDisconnected', userId);
+    }
+  }
+
+  socket.on('room', function(data){
+    tipoStoria = data.tipo;
+    if(tipoStoria == "individuale"){
+
+    } else {
+      socket.emit('getRoom', {id: userId, room: data.stanza});
+      stanzaId = data.stanza;
+    }
+    $("#loading_screen").hide();
+    $("#play").removeAttr('hidden');
+    timer = setInterval(timer,1000)
+  });
+
+  let punteggio = 0
+
+  function aggiornaPunteggio(rispostaGiusta) {
+    if(rispostaGiusta) {
+      if(!Number.isNaN(parseInt(arrayCaricaStorie[indice].elementi[index-1].puntiin))) {
+      punteggio += parseInt(arrayCaricaStorie[indice].elementi[index-1].puntiin)
+      }
+    } else {
+      if(!Number.isNaN(parseInt(arrayCaricaStorie[indice].elementi[index-1].puntiout))) {
+      punteggio -= parseInt(arrayCaricaStorie[indice].elementi[index-1].puntiout)
+    }
+    }
+    $("#testoPunteggio").text("Punteggio:"+punteggio)
+  }
+  function setCssDefault(stileFoglio) {
+  $("#divSchermataPlaying").removeClass()
+  $("#divSchermataPlaying").addClass("divSchermataPlaying")
+  switch (stileFoglio) {
+    case "vulcano" :
+    $("#divSchermataPlaying").addClass("vulcano")
+    break;
+    case "mare" :
+    $("#divSchermataPlaying").addClass("mare")
+    break;
+    case "giungla" :
+    $("#divSchermataPlaying").addClass("giungla")
+    break;
+    default:
+    break;
+  }
+
+}
+  </script>
+
+</body>
+
+</html>

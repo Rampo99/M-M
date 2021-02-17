@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+  <div id="divReturn">
+    <div id="navbarDiv">
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">M&M</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarWidget" aria-controls="navbarWidget" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarWidget">
+            <ul class="navbar-nav ml-auto" id="myTab" role="tablist">
+              <li class="nav-item ">
+                <a class="nav-link" id="player-tab" href="/" role="tab" aria-selected="false">Home</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Player
+                </a>
+                <div class="dropdown-menu player" aria-labelledby="navbarDropdown">
+                </div>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Editor<span class="sr-only">(current)</span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="/editor/crea">Crea Widget<span class="sr-only">(current)</span></a>
+                  <a class="dropdown-item active" href="#">I tuoi widget</a>
+                  <a class="dropdown-item" href="/editor/storie">Le tue storie</a>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="author-tab" href="/author" role="tab" aria-selected="false">Author</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div id="disposition">
+      <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <a class="widgetEstorie" href="/editor/crea" id="buttonCreaWidget">Crea Widget</a>
+        <button class="widgetEstorie" onclick="handleClickTuoiWidget()" id="buttonTuoiWidget">I tuoi widget</button>
+        <a class="widgetEstorie" href="/editor/storie" id="buttonStorie">Le tue storie</a>
+      </div>
+      <div id="editing">
+        <h2>Schermata di editing</h2>
+        <div id="divSchermataEditing">
+          <input type="hidden" id="title"/>
+          <div id='textDiv'></div>
+          <div id='aDiv'></div>
+          <div id='radioDiv'></div>
+          <div id='checkboxDiv'></div>
+          <div id='imgDiv'></div>
+          <div id='numberDiv'></div>
+          <div id='dataDiv'></div>
+          <div id='coloreDiv'></div>
+          <div id='cronoDiv'></div>
+          <div id='rispostaTestoDiv'></div>
+        </div>
+        <div id="divIndiziERisposte" style="display:none">
+        </div>
+        <div id="salvataggioSchermata" style="display:none">
+          <label for="titoloSchermata">Titolo schermata:&nbsp;&nbsp;<input name="titoloSchermata" type="text" id="titoloSchermata"></label>
+          <br />
+          <label for="scegliStile">Sfondo predefinito:&nbsp;&nbsp;</label>
+          <select id="scegliStile" onChange="applicaCSS()">
+            <option value="nessuno" >nessuno</option>
+            <option value="mare" >Mare</option>
+            <option value="giungla" >Giungla</option>
+            <option value="vulcano" >Vulcano</option>
+          </select>
+          <br />
+          <label for="selezionaStoria">Seleziona storia:&nbsp;&nbsp;</label>
+          <select id="selezionaStoria"></select>
+          <button id="button1" onclick="salvaSchermata()">Salva Schermata</button>
+        </div>
+      </div>
+      <div id="divModificaWidget">
+        <p>Elementi del widget</p>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+  var arrayPubblicate = []
+  let checkdesc = false;
+  $.ajax({
+    type: "get",
+    url: "/caricapubblicate",
+    success: function(response){
+        if(response == "error"){
+          console.log("Non hai storie pubblicate");
+        } else {
+          arrayPubblicate = response;
+          console.log(arrayPubblicate.length)
+          arrayPubblicate.map( (storiaPubblicata) => {
+            $(".player").append('<a class="dropdown-item" href="/player/?id='+storiaPubblicata.id+'">'+storiaPubblicata.titolo+'</a>')
+          })
+        }
+    }
+  });
+
+  let arrayTuoiWidget = []
+  let array = []
+  $.ajax({
+    type: "get",
+    url: "/caricawidget",
+    success: function(response){
+        if(response == "error"){
+          console.log("non hai widget");
+        } else {
+          arrayTuoiWidget = JSON.parse(response);
+          console.log(arrayTuoiWidget);
+        }
+
+    }
+  });
+  $.ajax({
+    type: "get",
+    url: "/caricastorie",
+    success: function(response){
+      if(response == "error"){
+        console.log("non hai storie")
+      } else {
+        array = JSON.parse(response);
+        console.log(array)
+        for(let i=0; i<array.length; i++){
+          $("#selezionaStoria").append('<option id="option'+i+'" value="'+i+'">'+array[i].titolo+'</option>')
+        }
+      }
+
+    }
+  });
+
+  function applicaCSS() {
+    let valoreStile=event.target.value
+    switch(valoreStile) {
+      case "nessuno":
+      $("#divSchermataEditing").removeClass()
+      break;
+      case "mare":
+      $("#divSchermataEditing").removeClass()
+      $("#divSchermataEditing").addClass("mare")
+      break;
+      case "giungla":
+      $("#divSchermataEditing").removeClass()
+      $("#divSchermataEditing").addClass("giungla")
+      break;
+      case "vulcano":
+      $("#divSchermataEditing").removeClass()
+      $("#divSchermataEditing").addClass("vulcano")
+      break;
+    }
+  }
+  //toglie gli elementi della divModifica
+  function svuotaModifica() {
+
+    let divModifica = document.getElementById("divModificaWidget")
+    let divIndERisp = document.getElementById("divIndiziERisposte")
+    let arrayModifica = Array.from(divModifica.childNodes)
+    let lunghezzaArrayModifica = arrayModifica.length
+    console.log(arrayModifica.length)
+    for (let i=1; i<lunghezzaArrayModifica; i++){
+      divModifica.removeChild(divModifica.childNodes[1])
+    }
+    if(checkdesc){
+      let arrayIndERisp = Array.from(divIndERisp.childNodes)
+      console.log(arrayIndERisp.length)
+      let lunghezzaArrayIndERisp = arrayIndERisp.length
+      for(let j=1; j<lunghezzaArrayIndERisp; j++){
+        divIndERisp.removeChild(divIndERisp.childNodes[1])
+      }
+    }
+    checkdesc = false;
+  }
+
+  function modificaElemento(elemento,index){
+    if($("#div"+ elemento +"Modifica" + index).is(":visible")) $("#div"+ elemento +"Modifica" + index).hide()
+    else $("#div"+ elemento +"Modifica" + index).show()
+  }
+
+  function salva(elemento, index){
+    if(elemento==='Text'){
+      if($("#testo" + elemento + index).val()===""){
+        alert('Campo obbligatorio')
+        $("#" + elemento + index).attr("value", "")
+        $("#" + elemento + index).html("")
+      } else{
+        var text = $("#testo" + elemento + index).val()
+        $("#" + elemento + index).attr("value", text);
+        $("#" + elemento + index).html(text)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+    if(elemento==='Link'){
+      if($("#testo" + elemento + index).val()===""||$("#testoNameLink"+index).val()===""){
+        alert('Campo obbligatorio')
+        $("#" + elemento + index).attr("value", "")
+        $("#" + elemento + index).html("")
+      } else{
+        var text = $("#testo" + elemento + index).val()
+        var link = $("#testoNameLink" + index).val()
+        $("#LinkOf"+index).html(link)
+        $("#" + elemento + index).attr("value", text);
+        $("#Link" + index).attr("href", text)
+        $("#" + elemento + index).html(link)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+    if(elemento==='Data' || elemento === 'Colore' || elemento ==='Ora' || elemento === 'Immagine'){
+      var descrizione = $("#descrizione" + elemento + index).val()
+      if (elemento==='Immagine') {
+        if(descrizione==="" || descrizione ===undefined){
+          alert('Campo obbligatorio')
+        } else{
+          if($("#testo" + elemento + index).val()===""){
+            alert('Campo obbligatorio')
+            $("#" + elemento + index).attr("value", "")
+            $("#" + elemento + index).html("")
+          } else{
+            var text = $("#testo" + elemento + index).val()
+            $("#" + elemento + index).attr("src", text)
+            $("#" + elemento + index).attr("alt", descrizione)
+            $("#imageOf"+index).html(descrizione)
+            $("#div"+ elemento +"Modifica" + index).hide()
+          }
+        }
+      } else if (elemento==='Data') {
+        if(descrizione==="" || descrizione ===undefined){
+          alert('Campo obbligatorio')
+        } else{
+          var text = $("#testo" + elemento + index).val()
+          $("#" + elemento + index).attr("aria-labelledby", descrizione)
+          $("#dataOf").html(descrizione)
+          $("#" + elemento + index).attr("value", text);
+          $("#" + elemento + index).html(text)
+          $("#div"+ elemento +"Modifica" + index).hide()
+        }
+      } else if (elemento==='Colore') {
+        if(descrizione==="" || descrizione ===undefined){
+          alert('Campo obbligatorio')
+        } else{
+          var text = $("#testo" + elemento + index).val()
+          $("#" + elemento + index).attr("aria-labelledby", descrizione)
+          $("#coloreOf").html(descrizione)
+          $("#" + elemento + index).attr("value", text);
+          $("#" + elemento + index).html(text)
+          $("#div"+ elemento +"Modifica" + index).hide()
+      }
+      }
+      else if (elemento==='Ora') {
+        if(descrizione==="" || descrizione ===undefined){
+          alert('Campo obbligatorio')
+        } else{
+          var text = $("#testo" + elemento + index).val()
+          $("#" + elemento + index).attr("aria-labelledby", descrizione)
+          $("#oraOf").html(descrizione)
+          $("#" + elemento + index).attr("value", text);
+          $("#" + elemento + index).html(text)
+          $("#div"+ elemento +"Modifica" + index).hide()
+        }
+      }
+    }
+    if(elemento==='RadioSelection') {
+      var name = $("#nameRadio" + index).val();
+      if(name==="" || name===undefined){
+        alert('Campo obbligatorio')
+        $("#" + elemento + index).attr("value", "");
+        $("#" + elemento + index).html("")
+      } else {
+        var text = $("#testo" + elemento + index).val()
+        $("[id^='nameRadio']").val(name);
+        $("input[type='radio']").attr("name", name);
+        $("#RadioButton" + index).attr("value", text);
+        $("#radioOf").html(name)
+        if ($("#rispostaRadioSelection" + index).is(':checked')) {
+          $("[id^='rispostaRadioSelection']").not('#rispostaRadioSelection'+index).prop("checked", false)
+          $("#RadioButton" + index).prop("checked", true)
+          $("[id^='RadioButton']").not('#RadioButton'+index).prop("checked", false)
+        }
+        $("#" + elemento + index).attr("value", text);
+        $("#" + elemento + index).html(text)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+    if(elemento === "Checkbox"){
+      var name = $("#nameCheckbox" + index).val();
+      if(name==="" || name===undefined){
+        alert('Campo obbligatorio')
+        $("#" + elemento + index).attr("value", "");
+        $("#" + elemento + index).html("")
+      } else {
+        var text = $("#testo" + elemento + index).val()
+        $("[id^='nameCheckbox']").val(name)
+        $("input[type='checkbox']").attr("name", name)
+        $("#CheckBox" + index).attr("value", text)
+        $("#checkboxOf").html(name)
+        if ($("#rispostaCeckbox" + index).is(':checked')) {
+          $("#CheckBox" + index).prop("checked", true)
+        }
+        $("#" + elemento + index).attr("value", text);
+        $("#" + elemento + index).html(text)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+    if(elemento==="Number"){
+      var name = $("#nameNumber" + index).val();
+      if(name==="" || name===undefined){
+        alert('Campo obbligatorio')
+        $("#" + elemento + index).attr("value", "");
+        $("#" + elemento + index).html("")
+        $("#numberOf").html("")
+      } else {
+        if($("#testo" + elemento + index).val()===""){
+          alert('Campo obbligatorio')
+          $("#" + elemento + index).attr("value", "")
+          $("#" + elemento + index).html("")
+        } else{
+          var text = $("#testo" + elemento + index).val()
+          $("#numberOf").html(name)
+          $("#nameNumber" + index).val(name)
+          $("input[type='number']").attr("name", name)
+          $("#Number" + index).attr("value", text)
+          $("#" + elemento + index).attr("value", text);
+          $("#" + elemento + index).html(text)
+          $("#div"+ elemento +"Modifica" + index).hide()
+        }
+      }
+    }
+    if(elemento==="Testo") {
+      let valoreTesto = $("#inputTesto"+index).val()
+      let descrizioneTesto = $("#descrizioneTesto"+index).val()
+      if(valoreTesto===""||valoreTesto ===undefined||descrizioneTesto===""||descrizioneTesto===undefined){
+        alert('Campo obbligatorio')
+        $("#"+elemento+index).val("")
+        $("#TestoOf").html("")
+      } else {
+        $("#"+elemento+index).val(valoreTesto)
+        $("#TestoOf").html(descrizioneTesto)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+    if(elemento==="Crono") {
+      let valoreCrono = $("#inputCrono"+index).val()
+      let descrizioneCrono = $("#descrizioneCrono"+index).val()
+      if(valoreCrono===""||valoreCrono ===undefined||descrizioneCrono===""||descrizioneCrono===undefined){
+        alert('Campo obbligatorio')
+        $("#"+elemento+index).val("")
+        $("#CronoOf").html("")
+      } else{
+        $("#"+elemento+index).val(valoreCrono)
+        $("#CronoOf").html(descrizioneCrono)
+        $("#div"+ elemento +"Modifica" + index).hide()
+      }
+    }
+  }
+
+  function annulla(elemento, index){
+    $("#div"+ elemento + "Modifica"+ index +" input").val("")
+    $("#div"+ elemento + "Modifica" + index).hide()
+  }
+
+  function salvaSchermata(){
+    let checkdesc3 = true;
+    $("#divModificaWidget div label input").each(function(){
+      console.log($(this).val());
+      if($(this).val() === "" || $(this).val() === undefined){
+        checkdesc3 = false;
+      }
+    });
+    console.log(checkdesc3);
+    let btn = $("#divSchermataEditing").children();
+    let title;
+    let checkdesc2 = true;
+    if($("#titoloSchermata").val()===""||$("#titoloSchermata").val()===undefined){
+      alert('Titolo schermata obbligatorio!')
+      checkdesc2 = false;
+    } else {
+       title = $("#titoloSchermata").val();
+    }
+    let btn2 = $("#selezionaStoria").val();
+    let obj = {}
+    for(let i = 1; i < btn.length; i++){
+      let child = $(btn[i]).children();
+      console.log(child)
+      if(child.length > 0){
+        let array2 = [];
+        for(let j = 0; j < child.length; j++){
+          if(btn[i].id == "textDiv"){
+            array2[j] = child[j].innerHTML;
+          } else if (btn[i].id == "aDiv"){
+            if(child[j].id=="LinkOf0" || child[j].id=="LinkOf1" || child[j].id=="LinkOf2" || child[j].id=="LinkOf3") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].href
+            }
+          } else if (btn[i].id == "imgDiv"){
+            if(child[j].id=="imageOf0" || child[j].id=="imageOf1" || child[j].id=="imageOf2" || child[j].id=="imageOf3") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].src
+            }
+          } else if (btn[i].id == "numberDiv"){
+            if(child[j].id=="numberOf") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].value
+            }
+          } else if (btn[i].id == "dataDiv"){
+            if(child[j].id=="dataOf") {
+              array2[j] = child[j].innerHTML
+            } else if (child[j].id=="oraOf") {
+              array2[j] = child[j].innerHTML
+            }else {
+              array2[j] = child[j].value
+            }
+          } else if (btn[i].id == "coloreDiv"){
+            if(child[j].id=="coloreOf") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].value
+            }
+          } else if (btn[i].id == "radioDiv"){
+            if(child[j].id=="RadioButton0" || child[j].id=="RadioButton1" || child[j].id=="RadioButton2" || child[j].id=="RadioButton3" ) {
+              array2[j] = child[j].checked
+            }else {
+              array2[j] = child[j].innerHTML
+            }
+          } else if (btn[i].id == "checkboxDiv"){
+            if(child[j].id=="CheckBox0" || child[j].id=="CheckBox1" || child[j].id=="CheckBox2" || child[j].id=="CheckBox3" || child[j].id=="CheckBox4" || child[j].id=="CheckBox5" || child[j].id=="CheckBox6" || child[j].id=="CheckBox7" ) {
+              array2[j] = child[j].checked
+            }else {
+              array2[j] = child[j].innerHTML
+            }
+          } else if (btn[i].id == "rispostaTestoDiv"){
+            if(child[j].id=="TestoOf") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].value
+            }
+          } else if (btn[i].id == "cronoDiv"){
+            if(child[j].id=="CronoOf") {
+              array2[j] = child[j].innerHTML
+            } else {
+              array2[j] = child[j].value
+            }
+          }
+           else {
+
+          }
+        }
+        console.log(array2)
+        obj[btn[i].id] = array2
+      }
+      $("#divSchermataEditing").removeClass()
+    }
+    console.log(obj);
+
+    if (checkdesc){
+      if($("#indizio1").val()===""||$("#indizio2").val()===""||$("#indizio3").val()===""||$("#indizio1").val()===undefined||$("#indizio2").val()===undefined||$("#indizio3").val()===undefined){
+        alert('Indizi obbligatori!')
+        checkdesc2 = false;
+      } else{
+        arrayindizi = [$("#indizio1").val(),$("#indizio2").val(),$("#indizio3").val()];
+        obj["indizi"] = arrayindizi;
+      }
+      if($("#punteggioRispostaEsatta").val()===""||$("#punteggioRispostaEsatta").val()===undefined||$("#punteggioRispostaSbagliata").val()===""||$("#punteggioRispostaSbagliata").val()==undefined||isNaN($("#punteggioRispostaEsatta").val())||isNaN($("#punteggioRispostaSbagliata").val())){
+        alert('Inserire i punteggi per risposta esatta e risposta sbagliata! (Il sistema accetta solo numeri)')
+        checkdesc2 = false;
+      } else{
+        obj["puntiin"] = $("#punteggioRispostaEsatta").val();
+        obj["puntiout"] = $("#punteggioRispostaSbagliata").val();
+      }
+      obj["stile"] =  $("#scegliStile").val();
+      if($("#messaggioErrore").val()===""||$("#messaggioErrore").val()===undefined){
+        alert('Inserire il messaggio di errore in caso di risposta errata!')
+        checkdesc2 = false;
+      } else {
+        obj["error"] = $("#messaggioErrore").val();
+      }
+    }
+
+    if(title != null){
+      obj["titolo"] = title;
+    }
+    let payload = {
+      schermate: obj,
+      number: btn2
+    }
+    console.log(payload);
+    if(checkdesc2 && checkdesc3){
+      $.ajax({
+        async: true,
+        type: "post",
+        url: "/aggiornastoria",
+        data: payload,
+        success: function(res){
+            console.log(res);
+            $("#divSchermataEditing :not(div)").remove();
+            $("#aDiv").append("<span id='feedbackSchermata'>Schermata salvata!</span>")
+                setTimeout(function(){
+                  $("#feedbackSchermata").remove();
+                }, 3000)
+                $("#divIndiziERisposte").hide();
+                $("#salvataggioSchermata").hide();
+                $("#divModificaWidget").empty();
+                $("#titoloSchermata").val("");
+        }
+      });
+    } else {
+      if(!checkdesc3){
+        alert("Devi compilare tutti i campi in alto a destra!");
+      }
+    }
+  }
+  //gestisce il click su tuoi widget
+  function handleClickTuoiWidget() {
+    //chiusura bottone
+    if ($("#buttonTuoiWidget").hasClass("activatedButton")) {
+      $("#buttonTuoiWidget").removeClass("activatedButton")
+      arrayTuoiWidget.map(() => {
+        let bottone = document.getElementById("buttonTuoiWidget")
+        bottone.removeChild(bottone.childNodes[1])
+      })
+    }
+    //apertura bottone
+    else {
+      arrayTuoiWidget.map((elementoArray) => {
+        let elementoWidget = document.createElement("BUTTON")
+        elementoWidget.innerHTML = Object.keys(elementoArray)
+
+        document.getElementById("buttonTuoiWidget").appendChild(elementoWidget)
+        // gestisce per ogni widget l'inserimento degli elementi nella schermata e la cancellazione dei precedenti elementi
+        elementoWidget.addEventListener("click", (event) => {
+          //cancellazione elementi
+          if($("#divSchermataEditing").hasClass("mare")) $("#divSchermataEditing").removeClass("mare");
+          if($("#divSchermataEditing").hasClass("giungla")) $("#divSchermataEditing").removeClass("giungla");
+          if($("#divSchermataEditing").hasClass("vulcano")) $("#divSchermataEditing").removeClass("vulcano");
+          $("#divSchermataEditing div").empty()
+          svuotaModifica()
+          //inserimento elementi
+          let oggettoMostraArray = Object.values(elementoArray)
+          console.log(oggettoMostraArray);
+          let arrayMostraWidget = oggettoMostraArray[0]
+          console.log(arrayMostraWidget)
+          arrayMostraWidget.map((elemMostraWidget) => {
+            $("#title").val(Object.keys(elementoArray));
+            switch(elemMostraWidget) {
+              case "Text" :
+              var index = $("[id^=divTextModifica]").length
+                $("#textDiv").append("<p type='text' class=limitaTesto id='Text"+ index +"'>Testo</p>")
+                $("#divModificaWidget").append('<span>Testo </span><button id="bottoneModificaText'+ index +'">Modifica</button><br><div id="divTextModifica'+ index +'"><label for="scriviTestoSchermata" id="testoInsText">Testo da inserire:</label><br><textarea id="testoText'+ index +'" aria-label="inserireTestoInizioSchermata"/></textarea><br>' +
+                                             '<button id="salvaTesto'+ index +'" aria-label="salva">Salva</button><button id="annullaTesto'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divTextModifica" + index).hide();
+                $("#salvaTesto" + index).bind("click", () => salva(elemMostraWidget,index))
+                $("#annullaTesto" + index).bind("click", () => annulla(elemMostraWidget,index))
+                $("#bottoneModificaText" + index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                 break;
+              case "Link":
+              var index = $("[id^=divLinkModifica]").length
+                $('#aDiv').append("<a href='' id='Link"+ index +"' aria-describedby='E \' un link esterno'></a><span id='LinkOf"+index+"' hidden></span>")
+                $("#Link"+index).css("pointer-events","none")
+                $("#Link"+index).css("cursor","default")
+                $("#divModificaWidget").append('<span>Link </span><button id="bottoneModificaLink'+ index +'" >Modifica</button><br><div id="divLinkModifica'+ index +'"><label for="scriviLink" id="aInsLink">Inserisci il link: <input type="text" id="testoLink'+ index +'" aria-label="inserireLink" /></label><label for="scriviNomeLink" id="aInsNameLink">Inserisci un nome da associare al link: <input type="text" id="testoNameLink'+ index +'" aria-label="inserireNomeLink"/></label><br>' +
+                                               '<button id="salvaLink'+ index +'" aria-label="salva">Salva</button><button id="annullaLink'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divLinkModifica" + index).hide();
+                $("#salvaLink" + index).bind("click", () => salva(elemMostraWidget, index))
+                $("#annullaLink" + index).bind("click", () => annulla(elemMostraWidget,index))
+                $("#bottoneModificaLink" + index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Immagine":
+                var index = $("[id^=divImmagineModifica]").length
+                $("#imgDiv").append("<span id='imageOf"+index+"' hidden></span><img id='Immagine"+ index +"' alt='immagine' src='' accept='image/*'></img>")
+                $("#divModificaWidget").append('<span>Immagine </span><button id="bottoneModificaImmagine'+ index +'" >Modifica</button><br><div id="divImmagineModifica'+ index +'"><label for="selezionaImmagine" id="imgInsImmagine">Inserisci link dell\'immagine: <input type="text" id="testoImmagine'+ index +'" aria-label="campoImmagine"/></label><br>' +
+                                               '<label for="descrizioneImmagine" id="labelDescrizioneImmagine">Inserisci la descrizione dell\'immagine: <input type="text" id="descrizioneImmagine'+ index +'" aria-labelledby="inserire una breve descrizione dell\'Immagine"/></label><br><button id="salvaImmagine'+ index +'" aria-label="salva">Salva</button><button id="annullaImmagine'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divImmagineModifica" + index).hide();
+                $("#salvaImmagine" + index).bind("click", () => salva(elemMostraWidget, index))
+                $("#annullaImmagine" + index).bind("click", () => annulla(elemMostraWidget, index))
+                $("#bottoneModificaImmagine"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "RadioSelection":
+              checkdesc = true;
+              var index = $("[id^=divRadioSelectionModifica]").length
+                $("#radioDiv").append("<span id='radioOf' hidden></span><input type='radio' id='RadioButton"+ index +"' name='radio' value='radio' disabled><span id='RadioSelection"+ index +"'></span><br>")
+                $("#divModificaWidget").append('<span>RadioButton </span><button id="bottoneModificaRadioSelection'+ index +'">Modifica</button><br><div id="divRadioSelectionModifica'+ index +'"><label for="scriviValoreRadio" id="radioInsValore">Inserire il valore del radio: <input type="text" id="testoRadioSelection'+ index +'" aria-label="campoValoreRadio"/></label><br>' +
+                                               '<label for="RaggruppamentoPerNome" id="inserireName">Inserire una parola che raggruppa i radio button (il valore è uguale per tutti): <input type="text" id="nameRadio'+ index +'" aria-label="campoRaggruppamentoRadio"/></label>'+
+                                               '<label for="rispostaRadio">E\' la risposta corretta? <input type="checkbox" id="rispostaRadioSelection'+ index +'" aria-describedby="Premi se è la risposta corretta"/><br><button id="salvaRadioSelection'+ index +'" aria-label="salva">Salva</button><button id="annullaCheckbox'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divRadioSelectionModifica" + index).hide();
+                $("#salvaRadioSelection"+ index).bind("click", () => salva(elemMostraWidget, index))
+                $("#annullaRadioSelection" + index).bind("click", () => annulla(elemMostraWidget, index))
+                $("#bottoneModificaRadioSelection" + index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Checkbox":
+              checkdesc = true;
+              var index = $("[id^=divCheckboxModifica]").length
+                $("#checkboxDiv").append("<span id='checkboxOf' hidden></span><input type='checkbox' id='CheckBox"+ index +"' name='check' disabled><span id='Checkbox"+ index +"'></span><br>")
+                $("#divModificaWidget").append('<span>Checkbox </span><button id="bottoneModificaCheckbox'+ index +'">Modifica</button><br><div id="divCheckboxModifica'+ index +'"><label for="scriviValoreCheckbox" id="checkboxInsValue">Inserisci il valore del checkbox: <input type="text" id="testoCheckbox'+ index +'" aria-label="inserireValoreCheckbox"/></label><br>' +
+                                               '<label for="RaggruppamentoPerNome" id="inserireName">Inserire una parola che raggruppa i checkbox (il valore è uguale per tutti): <input type="text" id="nameCheckbox'+ index +'" aria-label="campoRaggruppamentoCheckbox"/></label>'+
+                                               '<label for="rispostaCheckbox">E\' la risposta corretta? <input type="checkbox" id="rispostaCeckbox'+ index +'" aria-describedby="Premi se è una delle risposte corrette"/><br><button id="salvaCheckbox'+ index +'" aria-label="salva">Salva</button><button id="annullaRadioSelection'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divCheckboxModifica" + index).hide();
+                $("#salvaCheckbox"+ index).bind("click", () => salva(elemMostraWidget, index))
+                $("#annullaCheckbox" + index).bind("click", () => annulla(elemMostraWidget, index))
+                $("#bottoneModificaCheckbox" + index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Number":
+              checkdesc = true;
+              var index = $("[id^=divCheckboxModifica]").length
+                $("#numberDiv").append("<span id='numberOf'></span><input type='number' id=Number"+ index +" value='0' disabled>")
+                $("#divModificaWidget").append('<span>Number </span><button id="bottoneModificaNumber'+ index +'">Modifica</button><br><div id="divNumberModifica'+ index +'"><label for="scriviValoreNumero" id="numInsNumber">Inserisci un numero intero<input type="number" id="testoNumber'+ index +'" aria-label="inserireNumero"/></label><br>' +
+                                             '<label for="RaggruppamentoPerNome" id="inserireName">A cosa fa riferimento il numero?<input type="text" id="nameNumber'+ index +'" aria-label="campoRaggruppamentoNumber"/></label><button id="salvaNumber'+ index +'" aria-label="salva">Salva</button><button id="annullaNumber'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divNumberModifica" + index).hide();
+                $("#salvaNumber" + index).bind("click", () => salva(elemMostraWidget,index))
+                $("#annullaNumber" + index).bind("click", () => annulla(elemMostraWidget,index))
+                $("#bottoneModificaNumber" + index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Data":
+              checkdesc = true;
+                var index = $("[id^=divDataModifica]").length
+                $("#dataDiv").append('<span id="dataOf" hidden></span><input type="date" id="Data'+ index +'" aria-labelledby="" disabled><input type="radio" value="data" hidden/><br>')
+                  $("#divModificaWidget").append('<span>Data </span><button id="bottoneModificaData'+ index +'" >Modifica</button><br><div id="divDataModifica'+ index +'"><label for="selezionaData" id="dateInsData">Inserisci la data che desideri: <input type="date" id="testoData'+ index +'" aria-label="inputData"/></label><br>' +
+                                                 '<label for="descrizioneData" id="labelDescrizioneData">Descrivi a cosa si riferisce la data: <input type="text" id="descrizioneData'+ index +'" aria-labelledby="inserire a cosa si riferisce la data"/></label><br><button id="salvaData'+ index +'" aria-label="salva">Salva</button><button id="annullaData'+ index +'" aria-label="annulla">Annulla</button></div>')
+                  $("#divDataModifica" + index).hide();
+                  $("#salvaData" + index).bind("click", () => salva(elemMostraWidget, index))
+                  $("#annullaData" + index).bind("click", () => annulla(elemMostraWidget, index))
+                  $("#bottoneModificaData"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Colore":
+              checkdesc = true;
+              var index = $("[id^=divColoreModifica]").length
+                $("#coloreDiv").append("<span id='coloreOf' hidden></span><input type='color' id='Colore"+ index +"' aria-labelledby='' disabled>")
+                $("#divModificaWidget").append('<span>Colore </span><button id="bottoneModificaColore'+ index +'" >Modifica</button><br><div id="divColoreModifica'+ index +'"><label for="selezionaColore" id="colorInsColore">Inserisci il colore che desideri: <input type="color" id="testoColore'+ index +'" aria-label="inputColore"/></label><br>' +
+                                               '<label for="descrizioneColore" id="labelDescrizioneColore">Descrivi a cosa si riferisce il colore: <input type="text" id="descrizioneColore'+ index +'" aria-labelledby="inserire a cosa si riferisce il colore"/></label><br><button id="salvaColore'+ index +'" aria-label="salva">Salva</button><button id="annullaColore'+ index +'" aria-label="annulla">Annulla</button></div>')
+                $("#divColoreModifica" + index).hide();
+                $("#salvaColore" + index).bind("click", () => salva(elemMostraWidget, index))
+                $("#annullaColore" + index).bind("click", () => annulla(elemMostraWidget, index))
+                $("#bottoneModificaColore"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              case "Ora":
+              checkdesc = true;
+              var index = $("[id^=divDataModifica]").length
+                $("#dataDiv").append("<span id='oraOf' hidden></span><input type='time' id='Ora"+ index +"'aria-labelledby='' disabled><input type=radio value=ora hidden/><br>")
+                  $("#divModificaWidget").append('<span>Ora </span><button id="bottoneModificaOra'+ index +'" >Modifica</button><br><div id="divOraModifica'+ index +'"><label for="selezionaOra" id="timeInsOra">Inserisci l\' ora che desideri: <input type="time" id="testoOra'+ index +'" aria-label="inputOra"/></label><br>' +
+                                                 '<label for="descrizioneOra" id="labelDescrizioneOra">Descrivi a cosa si riferisce l\'ora: <input type="text" id="descrizioneOra'+ index +'" aria-labelledby="inserire a cosa si riferisce l\'ora"/></label><br><button id="salvaOra'+ index +'" aria-label="salva">Salva</button><button id="annullaOra'+ index +'" aria-label="annulla">Annulla</button></div>')
+                  $("#divOraModifica" + index).hide();
+                  $("#salvaOra" + index).bind("click", () => salva(elemMostraWidget, index))
+                  $("#annullaOra" + index).bind("click", () => annulla(elemMostraWidget, index))
+                  $("#bottoneModificaOra"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+                case "Testo":
+                checkdesc = true;
+                var index = $("[id^=divDataModifica]").length
+                  $("#rispostaTestoDiv").append("<span id='TestoOf' hidden ></span><input type='text' id='Testo"+ index +"'aria-labelledby='' disabled><br>")
+                  $("#divModificaWidget").append('<span>risposta testuale </span><button id="bottoneModificaTesto'+ index +'" >Modifica</button><br><div id="divTestoModifica'+ index +'"><label for="inputTesto"'+index+'" id="labelRisposta">Inserisci la risposta esatta <input type="text" id="inputTesto'+ index +'" aria-label="inputTesto"/></label><br>' +
+                                                   '<label for="descrizioneTesto" id="labelDescrizioneOra">Dai una descrizione al testo<input type="text" id="descrizioneTesto'+ index +'" aria-labelledby="Dai una descrizione al testo"/></label><br><button id="salvaRisposta'+ index +'" aria-label="salva">Salva</button><button id="annullaTesto'+ index +'" aria-label="annulla">Annulla</button></div>')
+                  $("#divTestoModifica" + index).hide();
+                  $("#salvaRisposta" + index).bind("click", () => salva(elemMostraWidget, index))
+                  $("#annullaTesto" + index).bind("click", () => annulla(elemMostraWidget, index))
+                  $("#bottoneModificaTesto"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+                case "Crono":
+                checkdesc = true;
+                var index = $("[id^=divDataModifica]").length
+                  $("#cronoDiv").append("<span id='CronoOf' hidden ></span><input type='text' id='Crono"+ index +"'aria-labelledby='' disabled><br>")
+                  $("#divModificaWidget").append('<span>risposta ordinata</span><button id="bottoneModificaCrono'+ index +'" >Modifica</button><br><div id="divCronoModifica'+ index +'"><label for="inputCrono'+index+'" id="labelCrono">Inserisci l\'ordine esatto (es: 1,2,3,4)<input type="text" id="inputCrono'+ index +'" aria-label="inputCrono"/></label><br>' +
+                                                   '<label for="descrizioneCrono" id="labelDescrizioneCrono">Dai una descrizione alla domanda<input type="text" id="descrizioneCrono'+ index +'" aria-labelledby="Dai una descrizione al testo"/></label><br><button id="salvaCrono'+ index +'" aria-label="salva">Salva</button><button id="annullaCrono'+ index +'" aria-label="annulla">Annulla</button></div>')
+                  $("#divCronoModifica" + index).hide();
+                  $("#salvaCrono" + index).bind("click", () => salva(elemMostraWidget, index))
+                  $("#annullaCrono" + index).bind("click", () => annulla(elemMostraWidget, index))
+                  $("#bottoneModificaCrono"+ index).bind("click", () => modificaElemento(elemMostraWidget, index))
+                break;
+              default:
+                break;
+            }
+          })
+          if(checkdesc){
+            indiziERisposte();
+          }
+          $("#salvataggioSchermata").show();
+        })
+      })
+      $("#buttonTuoiWidget").addClass("activatedButton")
+    }
+  }
+
+  function indiziERisposte(){
+
+    $("#divIndiziERisposte").show();
+    $("#divIndiziERisposte").append('<h3>Valori Generali Schermata</h3><p><label for="indizi">Scrivere tre indizi per aiutare l\'utente a risolvere l\'enigma:</label><br>' +
+                                    '1. <input type=text id=indizio1 name=indizi ><br>2. <input type=text id=indizio2 name=indizi><br>' +
+                                    '3. <input type=text id=indizio3 name=indizi></p> <span>Inserisci messaggio d\'errore </span>'+
+                                    '<input type=text id=messaggioErrore /><br /><hr /><p>Dai un punteggio alla risposta esatta e specifica di quanto diminuisce per ogni risposta non idonea:</p>'+
+                                    '<label for=punteggioRispostaEsatta >Punteggio risposta esatta</label><input type=text id=punteggioRispostaEsatta /><br>' +
+                                    '<label for=punteggioRispostaSbagliata >Punteggio risposta non idonea</label><input type=text id=punteggioRispostaSbagliata />' +
+                                    '<br /><hr /><span>Scegli uno stile da dare alla schermata: </span>')
+
+  }
+
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+
+</html>

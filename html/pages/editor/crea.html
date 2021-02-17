@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+  <div id="divReturn">
+    <div id="navbarDiv">
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">M&M</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCrea" aria-controls="navbarCrea" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCrea">
+            <ul class="navbar-nav ml-auto" id="myTab" role="tablist">
+              <li class="nav-item ">
+                <a class="nav-link" id="player-tab" href="/" role="tab" aria-selected="true">Home</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Player
+                </a>
+                <div class="dropdown-menu player" aria-labelledby="navbarDropdown">
+                </div>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Editor<span class="sr-only">(current)</span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item active" href="#">Crea Widget<span class="sr-only">(current)</span></a>
+                  <a class="dropdown-item" href="/editor/widget">I tuoi widget</a>
+                  <a class="dropdown-item" href="/editor/storie">Le tue storie</a>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="author-tab" href="/author" role="tab" aria-selected="false">Author</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div id="disposition">
+      <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <button class="widgetEstorie" onclick="handleClickCreaWidget()" id="buttonCreaWidget">Crea Widget</button>
+        <div id="divContieniBottoni"></div>
+        <a class="widgetEstorie" href="/editor/widget" id="buttonTuoiWidget">I tuoi widget</a>
+        <a class="widgetEstorie" href="/editor/storie" id="buttonStorie">Le tue storie</a>
+      </div>
+      <div id="editing">
+        <h2>Schermata di editing</h2>
+        <div id="divSchermataEditing">
+          <div id='textDiv'></div>
+          <div id='aDiv'></div>
+          <div id='radioDiv'></div>
+          <div id='checkboxDiv'></div>
+          <div id='imgDiv'></div>
+          <div id='numberDiv'></div>
+          <div id='dateDiv'></div>
+          <div id='colorDiv'></div>
+          <div id='timeDiv'></div>
+          <div id="cronoDiv"></div>
+          <div id="rispostaTestoDiv"></div>
+        </div>
+        <div id="nomeEaccessibilita">
+          <label for="widgetName">Nome del widget:&nbsp; &nbsp;</label><input type="text" name="widgetName" id="nomeWidget" />
+          <button onclick="salvaWidget()" id="salvaWidget">Salva Widget</button>
+        </div>
+      </div>
+      <div id="navigatoreWidget">
+        <p>Elementi nel widget</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+  var arrayPubblicate = []
+  $.ajax({
+    type: "get",
+    url: "/caricapubblicate",
+    success: function(response){
+        if(response == "error"){
+          console.log("Non hai storie pubblicate");
+        } else {
+          arrayPubblicate = response;
+          console.log(arrayPubblicate.length)
+          arrayPubblicate.map( (storiaPubblicata) => {
+            $(".player").append('<a class="dropdown-item" href="/player/?id='+storiaPubblicata.id+'">'+storiaPubblicata.titolo+'</a>')
+          })
+        }
+    }
+  });
+
+    let arrayCreaWidget = [{
+      nome: "Testo",
+      tagHtml: "text",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "casella di testo"
+    }, {
+      nome: "Link",
+      tagHtml: "a",
+      numElementi: 0,
+      maxElementi: 4,
+      descrizione: "link"
+    }, {
+      nome: "Immagine",
+      tagHtml: "img",
+      numElementi: 0,
+      maxElementi: 4,
+      descrizione: "immagine"
+    }, {
+      nome: "Radiobutton",
+      tagHtml: "radio",
+      numElementi: 0,
+      maxElementi: 4,
+      descrizione: "spunta di una casella"
+    }, {
+      nome: "Checkbox",
+      tagHtml: "checkbox",
+      numElementi: 0,
+      maxElementi: 8,
+      descrizione: "spunta di una o più caselle"
+    }, {
+      nome: "Numero",
+      tagHtml: "number",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "numero"
+    }, {
+      nome: "Data",
+      tagHtml: "date",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "inserire una data"
+    }, {
+      nome: "Colore",
+      tagHtml: "color",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "inserire un colore"
+    }, {
+      nome: "Ora",
+      tagHtml: "time",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "inserire un'ora"
+    }, {
+      nome: "Cronologia",
+      tagHtml: "crono",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "input cronologico"
+    }, {
+      nome: "Parola",
+      tagHtml: "rispostaTesto",
+      numElementi: 0,
+      maxElementi: 1,
+      descrizione: "input di testo"
+    }, {
+      nome: "Reset",
+      tagHtml: "inputReset",
+      descrizione: "reset"
+    }]
+
+
+    //gestisce l'aggiunta al navigatore e la cancellazione sia dal navigatore sia dalla schermata di editing
+    function aggiungiAlNavigatore(nome) {
+      let testoElementoNavigatore = document.createElement("SPAN")
+      testoElementoNavigatore.innerHTML = nome;
+      let bottoneElimina = document.createElement("BUTTON")
+      bottoneElimina.innerHTML = "elimina"
+      document.getElementById("navigatoreWidget").appendChild(testoElementoNavigatore)
+      document.getElementById("navigatoreWidget").appendChild(bottoneElimina)
+      bottoneElimina.addEventListener("click", () => {
+        $("#" + nome + "Div").find(":first-child").remove()
+        if(nome === "radio" || nome === "checkbox") $("#" + nome + "Div").find(":first-child").remove() //serve a rimuovere il tag br che passa in prima posizione.
+        let divNavigatore = document.getElementById("navigatoreWidget")
+        divNavigatore.removeChild(testoElementoNavigatore)
+        divNavigatore.removeChild(bottoneElimina)
+        if($("#divContieniBottoni #" + nome).is(":disabled")) $("#"+ nome).attr("disabled", false);
+        if(nome != "text" && nome != "img" && nome != "a"){
+          if($("#" + nome + "Div").children().length === 0) $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", false);
+        }
+        //funzione per trovare l'indice in arrayCreaWidget dell'elemento che viene eliminato
+        function trovaIndice(elemento) {
+          return elemento.tagHtml == nome
+        }
+        // lo usiamo per decrementare il corrispondente valore
+        let indice = arrayCreaWidget.findIndex(trovaIndice)
+        arrayCreaWidget[indice].numElementi--
+        $("#spanOf" + arrayCreaWidget[indice].tagHtml).text("(" + arrayCreaWidget[indice].numElementi + "/" + arrayCreaWidget[indice].maxElementi + ")")
+      })
+    }
+
+    //gestisce il click su Crea Widget e l'inserimento dinamico dei campi nella schermata di editing
+    function handleClickCreaWidget() {
+      //chiusura del bottone
+      if ($("#buttonCreaWidget").hasClass("activatedButton")) {
+        $("#buttonCreaWidget").removeClass("activatedButton")
+        $("#divContieniBottoni").hide();
+      } else {
+        //apertura del bottone
+        $("#divContieniBottoni").show();
+        $("#buttonCreaWidget").addClass("activatedButton")
+        if($("#divContieniBottoni button").length){}
+        else{
+        arrayCreaWidget.map((elementoArray) => {
+          if($("#divContieniBottoni").children().length === 9) $("#divContieniBottoni").append("<p>Form:</p>")
+          let elementoSidebar = document.createElement("BUTTON")
+          elementoSidebar.innerHTML = elementoArray.nome
+          elementoSidebar.setAttribute("id", elementoArray.tagHtml)
+          $("#divContieniBottoni").append(elementoSidebar)
+          //aggiunta una span per mostrare all'utente quanti elementi può inserire
+          if (elementoArray.tagHtml != "inputReset") {
+            $("#" + elementoArray.tagHtml).after("<span id=spanOf" + elementoArray.tagHtml + ">(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")</span>")
+            $("<br>").insertAfter("#spanOf" + elementoArray.tagHtml);
+          }
+          elementoSidebar.addEventListener("click", (event) => {
+            let stringaElementoHtml = event.target.id
+            switch (stringaElementoHtml) {
+              case "text":
+                  $("#textDiv").append("<p id='Text'>text</p>")
+                  elementoArray.numElementi++
+                  $("#spanOftext").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")");
+                  $("#text").attr("disabled", true);
+                  aggiungiAlNavigatore(event.target.id)
+                break;
+              case "a":
+                  $('#aDiv').append("<a href='' id='Link' >Link</a>")
+                  elementoArray.numElementi++
+                  $("#spanOfa").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  $("[id='Link']").css("pointer-events", "none")
+                  $("[id='Link']").css("cursor", "default")
+                  aggiungiAlNavigatore(event.target.id)
+                  if ($("#aDiv a").length > 3) $("#a").attr("disabled", true);
+                break;
+              case "img":
+                  $("#imgDiv").append("<img id='Immagine' alt='Immagine' src=''></img>")
+                  elementoArray.numElementi++
+                  $("#spanOfimg").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id);
+                  if ($("#imgDiv img").length > 3) $("#img").attr("disabled", true);
+                break;
+              case "radio":
+                  if($("#radioDiv input").length > 3) $("#radio").attr("disabled", true);
+                  $("#radioDiv").append("<input type='radio' id='RadioSelection' disabled ><br>")
+                  elementoArray.numElementi++
+                  $("#spanOfradio").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id)
+                  if($("#radioDiv input").length > 3) $("#radio").attr("disabled", true);
+                  $("#divContieniBottoni button:nth-of-type(n+5)").attr("disabled", true);
+                break;
+              case "checkbox":
+                  $("#checkboxDiv").append("<input type='checkbox' id='Checkbox' disabled><br>")
+                  elementoArray.numElementi++
+                  $("#spanOfcheckbox").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id)
+                  $("#divContieniBottoni button:nth-of-type(n+4):not(#checkbox)").attr("disabled", true);
+                  if($("#checkboxDiv input").length > 7) $("#checkbox").attr("disabled", true);
+                break;
+              case "number":
+                  $("#numberDiv").append("<input type='number' id='Number' disabled value=0 >")
+                  elementoArray.numElementi++
+                  $("#spanOfnumber").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id)
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+                break;
+              case "date":
+                  $("#dateDiv").append("<input type='date' id='Data' disabled>")
+                  elementoArray.numElementi++
+                  $("#spanOfdate").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id)
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+                break;
+              case "color":
+                  $("#colorDiv").append("<input type='color' id='Colore' disabled>");
+                  elementoArray.numElementi++
+                  $("#spanOfcolor").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id);
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+                break;
+              case "time":
+                  $("#timeDiv").append("<input type='time' id='Ora' disabled>");
+                  elementoArray.numElementi++
+                  $("#spanOftime").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id);
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+                break;
+              case "crono":
+                  $("#cronoDiv").append("<input type=text id=Crono disabled/>");
+                  elementoArray.numElementi++
+                  $("#spanOfcrono").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")")
+                  aggiungiAlNavigatore(event.target.id);
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+                  break;
+              case "rispostaTesto":
+                  $("#rispostaTestoDiv").append("<input type=text id=Testo disabled/>");
+                  elementoArray.numElementi++
+                  $("#spanOfrispostaTesto").text("(" + elementoArray.numElementi + "/" + elementoArray.maxElementi + ")");
+                  aggiungiAlNavigatore(event.target.id);
+                  $("#divContieniBottoni button:nth-of-type(n+4)").attr("disabled", true);
+              break;
+              case "inputReset":
+                $("#divSchermataEditing div").empty();
+                var navigatoreWidget = document.getElementById("navigatoreWidget")
+                navigatoreWidget.innerHTML = "<p>Elementi nel widget</p>"
+                arrayCreaWidget.map( (elementoReset) => {
+                elementoReset.numElementi = 0
+                $("#spanOf" + elementoReset.tagHtml).text("(" + elementoReset.numElementi + "/" + elementoReset.maxElementi + ")")
+              })
+              $("#divContieniBottoni button").attr("disabled", false);
+                break;
+              default:
+                break;
+            }
+            $("#inputReset").attr("disabled", false);
+          })
+        })
+      }
+      }
+    }
+
+    function salvaWidget() {
+      if($("#nomeWidget").val() === "") alert("Errore! Inserire un nome al widget.");
+      else {
+      let name = document.getElementById("nomeWidget").value
+      let eles = $("#divSchermataEditing div").children()
+      var mywidget = [];
+      for (var i = 0; i < eles.length; i++) {
+        mywidget[i] = eles[i].id;
+      }
+      console.log(mywidget);
+      let payload = {
+        items: mywidget,
+        name: name
+      };
+      console.log(payload)
+      $.ajax({
+        async: true,
+        type: "post",
+        url: "/salvawidget",
+        data: payload,
+        success: function(res) {
+          console.log(res);
+          if (res === 'OK') {
+            $("#divSchermataEditing div").empty();
+
+            var navigatoreWidget = document.getElementById("navigatoreWidget")
+            navigatoreWidget.innerHTML = "<p>Elementi nel widget</p>"
+            $("#aDiv").append("<span id='feedbackWidget'>Widget salvato!</span>")
+            setTimeout(function() {
+              var feedback = document.getElementById('feedbackWidget')
+              document.getElementById("aDiv").removeChild(feedback)
+            }, 3000)
+            $("#divContieniBottoni button").attr("disabled", false);
+            $("#nomeWidget").val("")
+          } else {
+            alert("Errore nella creazione del widget. Prova a cambiare il nome!")
+          }
+        }
+      });
+      arrayCreaWidget.map( (elementoReset) => {
+      elementoReset.numElementi = 0
+      $("#spanOf" + elementoReset.tagHtml).text("(" + elementoReset.numElementi + "/" + elementoReset.maxElementi + ")")
+    })
+  }
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+
+</html>

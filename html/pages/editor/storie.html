@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="/styles.css">
+  <link type="text/css" rel="stylesheet" href="/jquery-ui/jquery-ui.min.css">
+  <script src="/jquery-ui/external/jquery/jquery.js"></script>
+  <script src="/jquery-ui/jquery-ui.min.js"></script>
+</head>
+
+<body>
+  <div id="divStorie">
+    <div>
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">M&M</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarStorie" aria-controls="navbarStorie" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarStorie">
+            <ul class="navbar-nav ml-auto" id="myTab" role="tablist">
+              <li class="nav-item ">
+                <a class="nav-link" id="player-tab" href="/" role="tab" aria-selected="false">Home</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Player
+                </a>
+                <div class="dropdown-menu player" aria-labelledby="navbarDropdown">
+                </div>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link active dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Editor<span class="sr-only">(current)</span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="/editor/crea">Crea Widget</a>
+                  <a class="dropdown-item" href="/editor/widget">I tuoi widget</a>
+                  <a class="dropdown-item active" href="#">Le tue storie<span class="sr-only">(current)</span></a>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="author-tab" href="/author" role="tab" aria-selected="false">Author</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div id="disposition">
+      <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <a class="widgetEstorie" href="/editor/crea" id="buttonCreaWidget">Crea Widget</a>
+        <a class="widgetEstorie" href="/editor/widget" id="buttonTuoiWidget">I tuoi widget</a>
+        <button class="widgetEstorie" id="buttonStorie">Le tue storie</button>
+      </div>
+      <div id="divSchermataStorie">
+        <h1>Gestione Storie</h1>
+        <hr>
+      <div id="divElencoStorie">
+      </div>
+      <button id="creaUnaNuovaStoria" onClick="settingNuovaStoria()">+ Crea una nuova storia</button>
+    </div>
+    </div>
+  </div>
+
+
+  <script type="text/javascript">
+  var arrayPubblicate = []
+  $.ajax({
+    type: "get",
+    url: "/caricapubblicate",
+    success: function(response){
+        if(response == "error"){
+          console.log("Non hai storie pubblicate");
+        } else {
+          arrayPubblicate = response;
+          console.log(arrayPubblicate.length)
+          arrayPubblicate.map( (storiaPubblicata) => {
+            $(".player").append('<a class="dropdown-item" href="/player/?id='+storiaPubblicata.id+'">'+storiaPubblicata.titolo+'</a>')
+          })
+        }
+    }
+  });
+
+  let arrayCaricaStorie = []
+  $.ajax({
+    type: "get",
+    url: "/caricastorie",
+    success: function(response){
+      if(response == "error"){
+        console.log("non ci sono storie")
+      } else {
+        console.log(response);
+        arrayCaricaStorie = JSON.parse(response);
+     //    let indexCarica = 1 // serve per indicizzare correttamente la storia1
+        // per ogni storia creo una div e gli inserisco i dati, poi chiamo nuovaStoria per attivare i bottoni
+        arrayCaricaStorie.map((storia) => {
+          let titoloCarica = storia.titolo
+          let accessibileCarica = storia.accessibile
+          let fasciaCarica = storia.fascia
+          let elementi = storia.elementi
+          let indexCarica = storia.id
+          $('<div id="storia'+indexCarica+'"><span id="titoloStoria'+indexCarica+'"></span> <span id="accStoria'+indexCarica+'"></span> <span id="fasciaStoria'+indexCarica+'"></span><br><hr>'+
+            '<button id="riepilogoStoria'+indexCarica+'" onClick=riepilogo('+indexCarica+')>Riepilogo ⇣</button><button id="qrcodeStoria'+indexCarica+'" onClick=qrCode('+indexCarica+')>Genera QR Code</button>'+
+            '<button id="modificaStoria'+indexCarica+'" onClick=modifica('+indexCarica+')>Modifica</button><button id="eliminaStoria'+indexCarica+'" onClick=elimina('+indexCarica+')>Elimina</button><button id="duplicaStoria'+indexCarica+'" onClick=duplica('+indexCarica+')>Duplica</button>'+
+            '<button id="inserisciCss'+indexCarica+'" onClick=css('+indexCarica+')>Inserisci CSS</button><button id="eliminaCss'+indexCarica+'" onClick=eliminaCss('+indexCarica+')>Elimina CSS</button>'+
+            '<button id="pubblicaStoria'+indexCarica+'" onClick=pubblica('+indexCarica+')>Pubblica</button><button id="ritiraStoria'+indexCarica+'" onClick=ritira('+indexCarica+')>Ritira</button></div>').insertAfter("#divSchermataStorie h1");
+          $("#titoloStoria"+indexCarica).html(titoloCarica)
+          $("#accStoria"+indexCarica).html(accessibileCarica)
+          $("#fasciaStoria"+indexCarica).html(fasciaCarica)
+          nuovaStoria();
+        })
+        console.log(arrayCaricaStorie)
+      }
+    }
+  });
+  function pubblica(index){
+    function trovaIndice(elemento) {
+          return elemento.id == index
+    }
+    // trova l'indice nell'array corrispondente all'index di riepilogostoriaindex
+        let indiceArray = arrayCaricaStorie.findIndex(trovaIndice)
+    let payload = {
+      titolo: arrayCaricaStorie[indiceArray].titolo,
+      qrcode: 'http://site192032.tw.cs.unibo.it/player?id='+index,
+      id: index
+    }
+    $.ajax({
+      type: "post",
+      url: "/pubblica",
+      data: payload,
+      success: function(res){
+        if(res == "OK") alert("Storia pubblicata nella home");
+        else{
+            alert("Storia giá pubblicata, non puoi pubblicarla!");
+          }
+      }
+    });
+  }
+  function ritira(index){
+    $.ajax({
+      type: "post",
+      url: "/ritira",
+      data: {id: index},
+      success: function(res){
+        if(res == "OK") alert("Storia ritirata nella home");
+        else{
+            alert("Storia non ancora pubblicata, non puoi ritirarla!");
+          }
+      }
+    });
+  }
+  function qrCode(index){
+    if($("#qrcodeStoria"+index).hasClass("qrcodeAperto")){
+        $("#qrCodeImg"+index).remove()
+        $("#qrcodeStoria"+index).removeClass("qrcodeAperto")
+    } else {
+      $("#qrc"+index).remove()
+        $("#storia"+index).append('<div id="qrCodeImg'+index+'"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://site192032.tw.cs.unibo.it/player?id='+index+'" alt="qrcode'+index+'" id="qrc'+index+'" width="100" height="100"/></div>')
+        $("#qrcodeStoria"+index).addClass("qrcodeAperto")
+    }
+  }
+
+  function css(index){
+    if($("#inserisciCss"+index).hasClass("cssAperto")){
+        $("#divCSS"+index).remove()
+        $("#inserisciCss"+index).removeClass("cssAperto")
+    } else {
+        $("#storia"+index).append('<div id="divCSS'+index+'"><textarea id="testoCSS'+index+'" rows="9" cols="50"></textarea><br><button id="okCSS'+index+'" onClick=salvaCss('+index+')>Salva</button></div>')
+        $("#inserisciCss"+index).addClass("cssAperto")
+    }
+    $.ajax({
+      type: "post",
+      url: "/getcustomcss",
+      data: {index: index},
+      success: function(res){
+          if(res == "Error"){
+          } else {
+            $('#testoCSS'+index).val(res)
+          }
+
+
+      }
+    });
+
+  }
+  function salvaCss(index){
+    let css = $('#testoCSS'+index).val()
+    $.ajax({
+      type: "post",
+      url: "/savecustomcss",
+      data: {index: index, css: css},
+      success: function(res){
+          if(res == "Error"){
+            alert("Errore!")
+          } else {
+            alert("CSS salvato!")
+          }
+
+
+      }
+    });
+  }
+  function eliminaCss(index){
+    $.ajax({
+      type: "post",
+      url: "/deletecustomcss",
+      data: {index: index},
+      success: function(res){
+          if(res == "Error"){
+            alert("Non esiste nessun file css per questa storia!")
+          } else {
+            $('#testoCSS'+index).val()
+            alert("CSS eliminato!")
+          }
+
+
+      }
+    });
+  }
+  //gestisce il click su crea nuova storia
+  function settingNuovaStoria(){
+    if ($("#divElencoStorie").hasClass("creazioneStoriaAttiva")){
+      //non fare niente
+    } else {
+    $("#divElencoStorie").addClass("creazioneStoriaAttiva")
+    $('<div id="creaStoria"><input type="text" id="insTitoloStoria" placeholder="Titolo storia"/>'+
+      '<label for="checkAccessibilità">Accessibile</label><input type="checkbox" id="checkAccessibilità" name="accessibile"/><br>'+
+      '<label for="insFasciaStoria">Fascia di età</label><select id="insFasciaStoria">' +
+      '<option value="7-10">7-10 anni</option><option value="11-14">11-14 anni</option><option value="15-18">15-18 anni</option></select>'+
+      '<br><button id="nuovaStoria">Crea!</button><button id="annullaStoria">Annulla</button></div>').insertAfter($("#divSchermataStorie h1"));
+    //click su crea
+    $("#nuovaStoria").on("click", () => {
+      let storiaNuova = true
+      nuovaStoria(storiaNuova)
+      $("#divElencoStorie").removeClass("creazioneStoriaAttiva")
+    })
+    //click su annulla
+    $("#annullaStoria").on("click", () => {
+      $("#creaStoria").remove()
+      $("#divElencoStorie").removeClass("creazioneStoriaAttiva")})
+  }
+  }
+
+  //gestisce il riepilogo per ogni storia
+  function riepilogo(index) {
+    $("#riepilogoStoria"+index).css("width", "100px")
+    function trovaIndice(elemento) {
+          return elemento.id == index
+    }
+    // trova l'indice nell'array corrispondente all'index di riepilogostoriaindex
+        let indiceArray = arrayCaricaStorie.findIndex(trovaIndice)
+    //gestisce l'apertura e la chiusura del riepilogo
+        if($("#riepilogoStoria"+index).hasClass("activatedRiepilogo")){
+          $("#divRiepilogo"+index).remove()
+          $("#riepilogoStoria"+index).removeClass("activatedRiepilogo")
+        } else {
+        $("#riepilogoStoria"+index).css("width", "100px")
+        $("#ritiraStoria"+index).after('<div id="divRiepilogo'+index+'"></div>')
+        $("#divRiepilogo"+index).sortable()
+        for(let i=0; i<arrayCaricaStorie[indiceArray].elementi.length; i++){
+          $("#divRiepilogo"+index).append('<span id="spanSchermataRiepilogo'+i+'" >'+arrayCaricaStorie[indiceArray].elementi[i].titolo+
+                                          '<button id="eliminaSchermata'+i+'" onClick=eliminaSchermata('+index+","+i+')>Elimina</button>'+
+                                          '<input type=number id=inputRiepilogo'+i+' value='+i+' hidden/><br /></span>')
+          $("#spanSchermataRiepilogo"+i).draggable({
+            connectToSortable: "#divRiepilogo"+index,
+            containment: "#divRiepilogo"+index
+          })
+        }
+        $("#divRiepilogo"+index).append('<button id=bottoneSalvaRiepilogo'+index+' onClick=salvaRiepilogo('+index+')>Salva riepilogo</button>')
+        $("#riepilogoStoria"+index).addClass("activatedRiepilogo")
+      }
+  }
+
+  function salvaRiepilogo(idstoria) {
+    let elementiDivRiepilogo = document.getElementById("divRiepilogo"+idstoria).childNodes
+    Array.from(elementiDivRiepilogo)
+    let array = [];
+    for(let i = 0; i < elementiDivRiepilogo.length-1 ; i++) {
+      array[i] = parseInt(elementiDivRiepilogo[i].childNodes[2].value)
+    }
+    let payload = {
+      idstoria: idstoria,
+      ordine: array
+    }
+    $.ajax({
+      type: "post",
+      url: "/riordina",
+      data: payload,
+      success: function(res){
+          console.log(res);
+          $.ajax({
+            type: "get",
+            url: "/caricastorie",
+            success: function(response){
+              if(response == "error"){
+                console.log("non ci sono storie")
+              } else {
+                arrayCaricaStorie = JSON.parse(response);
+                riepilogo(idstoria);
+                riepilogo(idstoria);
+                alert("Riepilogo salvato con successo!")
+              }
+            }
+          });
+      }
+    });
+  }
+
+  function eliminaSchermata(idstoria, idschermata){
+    $("#spanSchermataRiepilogo"+idschermata).remove()
+    let payload = {
+      idschermata: idschermata,
+      idstoria: idstoria
+    }
+    $.ajax({
+      type: "post",
+      url: "/eliminaSchermata",
+      data: payload,
+      success: function(res){
+          console.log(res);
+          $.ajax({
+            type: "get",
+            url: "/caricastorie",
+            success: function(response){
+              if(response == "error"){
+                console.log("non ci sono storie")
+              } else {
+                arrayCaricaStorie = JSON.parse(response);
+                riepilogo(idstoria);
+                riepilogo(idstoria);
+              }
+            }
+          });
+      }
+    });
+
+    }
+
+  function duplica(index){
+    let payload2 = {
+      number: index.toString()
+    }
+    let indexDuplica;
+    $.ajax({
+      async: false,
+      type: "post",
+      url: "/duplicastoria",
+      data: payload2,
+      success: function(res){
+          console.log(res);
+          indexDuplica = res;
+          console.log(indexDuplica)
+          $("#storia"+index).after('<div id="storia'+indexDuplica+'"><span id="titoloStoria'+indexDuplica+'"></span> <span id="accStoria'+indexDuplica+'"></span> <span id="fasciaStoria'+indexDuplica+'"></span><br><hr>'+
+                                          '<button id="riepilogoStoria'+indexDuplica+'" onClick=riepilogo('+indexDuplica+')>Riepilogo ⇣</button><button id="qrcodeStoria'+indexDuplica+'" onClick=qrCode('+indexDuplica+')>Genera QR Code</button>'+
+                                          '<button id="modificaStoria'+indexDuplica+'" onClick=modifica('+indexDuplica+')>Modifica</button><button id="eliminaStoria'+indexDuplica+'" onClick=elimina('+indexDuplica+')>Elimina</button><button id="duplicaStoria'+indexDuplica+'" onClick=duplica('+indexDuplica+')>Duplica</button><button id="inserisciCss'+indexDuplica+'" onClick=css('+indexDuplica+')>Inserisci CSS</button><button id="inserisciCss'+indexDuplica+'" onClick=eliminaCss('+indexDuplica+')>Elimina CSS</button><button id="pubblicaStoria'+indexDuplica+'" onClick=pubblica('+indexDuplica+')>Pubblica</button><button id="ritiraStoria'+indexDuplica+'" onClick=ritira('+indexDuplica+')>Ritira</button></div>')
+          $("#titoloStoria"+indexDuplica).html($("#titoloStoria"+index).html())
+          $("#accStoria"+indexDuplica).html($("#accStoria"+index).html())
+          $("#fasciaStoria"+indexDuplica).html($("#fasciaStoria"+index).html())
+      }
+    });
+    $.ajax({
+      type: "get",
+      url: "/caricastorie",
+      success: function(response){
+        if(response == "error"){
+          console.log("non ci sono storie")
+        } else {
+          arrayCaricaStorie = JSON.parse(response)
+          console.log(arrayCaricaStorie)
+        }
+      }
+    });
+
+
+    //chiama nuovaStoria per attivare i bottoni della storia duplicata
+    nuovaStoria()
+  }
+
+  function modifica(index){
+    console.log(index);
+    //chiusura modifica
+    if($("#modificaStoria"+index).hasClass("modificaAperta")){
+        $("#divModifica"+index).remove()
+        $("#modificaStoria"+index).removeClass("modificaAperta")
+    //apertura modifica
+    } else {
+
+        $("#storia"+index).append('<div id="divModifica'+index+'"><input type="text" id="modificaTitoloStoria'+index+'"/><br>'+
+                                 '<label for="modificaCheckAccessibilità">Accessibile</label><input type="checkbox" id="modificaCheckAccessibilità'+index+'" name="accessibile"/><br>'+
+                                 '<label for="modificaFasciaStoria">Fascia di età</label><select id="modificaFasciaStoria'+index+'">' +
+                                 '<option value="7-10">7-10 anni</option><option value="11-14">11-14 anni</option><option value="15-18">15-18 anni</option></select>'+
+                                 '<br><button id="salvaModifiche'+index+'">Salva</button></div>')
+        $("#modificaStoria"+index).addClass("modificaAperta")
+        //salva le modifiche alle caratteristiche della storia
+        $("#salvaModifiche"+index).on("click", () => {
+            var titoloModificato = $("#modificaTitoloStoria"+index).val()
+            if($("#modificaCheckAccessibilità"+index).prop("checked")){
+              var modificaAccessibile = "Accessibile"
+            } else {
+              var modificaAccessibile = "Non accessibile"
+            }
+            var modificaInsFascia = $("#modificaFasciaStoria"+index).val()
+            $("#titoloStoria"+index).html(titoloModificato)
+            $("#accStoria"+index).html(modificaAccessibile)
+            $("#fasciaStoria"+index).html(modificaInsFascia +" anni")
+            let payload = {
+              titolo: titoloModificato,
+              accessibile: modificaAccessibile,
+              fascia: modificaInsFascia,
+              number: index
+            }
+            $.ajax({
+              async: false,
+              type: "post",
+              url: "/modificastoria",
+              data: payload,
+              success: function(res){
+                  console.log(res);
+              }
+            });
+            $.ajax({
+              type: "get",
+              url: "/caricastorie",
+              success: function(response){
+                if(response == "error"){
+                  console.log("non ci sono storie")
+                } else {
+                  arrayCaricaStorie = JSON.parse(response);
+                  console.log(arrayCaricaStorie)
+                }
+              }
+            });
+        })
+
+  }
+  }
+
+  function elimina(index){
+    $("#storia"+index).remove()
+    let payload = {
+      number: index
+    }
+    $.ajax({
+      type: "post",
+      url: "/ritira",
+      data: {id: index},
+      success: function(res){
+      }
+    });
+    $.ajax({
+      type: "post",
+      url: "/deletecustomcss",
+      data: {index: index},
+      success: function(res){
+      }
+    });
+    $.ajax({
+      async: true,
+      type: "post",
+      url: "/eliminastoria",
+      data: payload,
+      success: function(res){
+          console.log(res);
+      }
+    });
+    $.ajax({
+      type: "get",
+      url: "/caricastorie",
+      success: function(response){
+        if(response == "error"){
+          console.log("non ci sono storie")
+        } else {
+          arrayCaricaStorie = JSON.parse(response)
+          console.log(arrayCaricaStorie)
+        }
+      }
+    });
+  }
+  function nuovaStoria(storiaNuova) {
+    var index;
+    console.log(index)
+    //se la storia è creata manualmente dall'utente entro nell'if e prendo i dati dai campi di inserimento
+    if(storiaNuova) {
+    console.log(index)
+    var insTitle = $("#insTitoloStoria").val()
+    if($("#checkAccessibilità").prop("checked")){
+      var accessibile = "Accessibile"
+    } else {
+      var accessibile = "Non accessibile"
+    }
+    var insFascia = $("#insFasciaStoria").val()
+    let payload = {
+      titolo: insTitle,
+      accessibile: accessibile,
+      fascia: insFascia
+    }
+    console.log(payload);
+    $.ajax({
+      async: false,
+      type: "post",
+      url: "/salvastoria",
+      data: payload,
+      success: function(res){
+          console.log(res);
+          index = res;
+
+      }
+    });
+    console.log(index)
+
+    $('<div id="storia'+index+'"><span id="titoloStoria'+index+'"></span> <span id="accStoria'+index+'"></span> <span id="fasciaStoria'+index+'"></span><br><hr>'+
+      '<button id="riepilogoStoria'+index+'" onClick=riepilogo('+index+')>Riepilogo ⇣</button><button id="qrcodeStoria'+index+'" onClick=qrCode('+index+')>Genera QR Code</button>'+
+      '<button id="modificaStoria'+index+'" onClick=modifica('+index+')>Modifica</button><button id="eliminaStoria'+index+'" onClick=elimina('+index+')>Elimina</button><button id="duplicaStoria'+index+'" onClick=duplica('+index+')>Duplica</button>'+
+      '<button id="inserisciCss'+index+'" onClick=css('+index+')>Inserisci CSS</button><button id="eliminaCss'+index+'" onClick=eliminaCss('+index+')>Elimina CSS</button>'+
+      '<button id="pubblicaStoria'+index+'" onClick=pubblica('+index+')>Pubblica</button><button id="ritiraStoria'+index+'" onClick=ritira('+index+')>Ritira</button></div>').insertAfter("#divSchermataStorie h1");
+    $("#titoloStoria"+index).html(insTitle)
+    $("#accStoria"+index).html(accessibile)
+    $("#fasciaStoria"+index).html(insFascia+" anni")
+  }
+    $("#creaStoria").remove()
+    $.ajax({
+       type: "get",
+       url: "/caricastorie",
+       success: function(response){
+         if(response == "error"){
+           console.log("non ci sono storie")
+         } else {
+           arrayCaricaStorie = JSON.parse(response)
+           console.log(arrayCaricaStorie)
+         }
+       }
+     });
+  }
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+
+</html>
