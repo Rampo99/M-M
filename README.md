@@ -1,16 +1,16 @@
 # M&M
-Crea le tue storie, oppure gioca quelle giá predefinite!
+Create your stories, or play the predefined ones!
 
-# Cos'é?
-M&M é una visita al museo digitalizzata ed interattiva, vista la quarantena si possono creare storie per giocare una sorta di caccia al tesoro anche da casa.
+# What is it?
+M&M is a digitized and interactive visit to the museum, due to quarantine you can create stories to play a kind of treasure hunt even from home.
 
-# Come installarlo
-Fare git clone della cartella:
+# Installation
+Execute folder git clone:
 >cd cartella
 node index
 
-# Altre informazioni
-Questo sito é stato sviluppato per il progetto di Tecnologie Web dell'Universitá di Bologna. Personalmente mi sono dedicato solo alla parte lato server, di progettazione ed ai socket, mentre ho lasciato la grafica agli altri membri del gruppo:
+# Other Informations
+This site was developed for the Web Technologies project of the University of Bologna. Personally, I only devoted myself to the server side, design and sockets, while I left the graphics to the other members of the group:
 - [Filippo Perrina](https://github.com/Perghio)
 - [Marco Spallone](https://github.com/marcospallone)
 - [Cristian Mazza] 
