@@ -6,7 +6,7 @@ M&M is a digitized and interactive visit to the museum, due to quarantine you ca
 
 # Installation
 Execute folder git clone:
->cd cartella
+>cd folder
 node index
 
 # Other Informations
